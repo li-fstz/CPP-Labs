@@ -12,11 +12,7 @@ int main(int argc, char *argv[])
 	//
 	// 调用 InitRules 函数初始化文法
 	//
-#ifdef CODECODE_CI
-	Rule *pHead = InitRules_CI(); // 此行代码在线上流水线运行
-#else
-	Rule *pHead = InitRules(); // 此行代码在 CP Lab 中运行
-#endif
+	Rule *pHead = InitRules();
 
 	//
 	// 输出文法
@@ -253,106 +249,6 @@ Rule *InitRules()
 			pNewSymbol = CreateSymbol();
 			pNewSymbol->isToken = pSymbol->isToken;
 			strcpy(pNewSymbol->SymbolName, pSymbol->SymbolName);
-			*pSymbolPtr = pNewSymbol;
-
-			pSymbolPtr = &pNewSymbol->pNextSymbol;
-		}
-
-		pRule = pRule->pNextRule;
-	}
-
-	return pHead;
-}
-
-/*
-功能：
-	初始化文法链表(在执行流水线时调用)。
-	
-返回值：
-	文法的头指针。
-*/
-Rule *InitRules_CI()
-{
-	int nRuleCount = 0;
-	// 需要读取多行文本
-	for (int i = 0; i < 20; i++)
-	{
-		gets(rule_table_ci[i]);
-		int length = strlen(rule_table_ci[i]);
-		if (length == 0)
-		{
-			break;
-		}
-
-		for (int j = 0; j < length; j++)
-		{
-			if (rule_table_ci[i][j] == ' ')
-			{
-				ruleNameArr[i][j] = '\0';
-				break;
-			}
-			ruleNameArr[i][j] = rule_table_ci[i][j];
-		}
-		nRuleCount++;
-	}
-
-	Rule *pHead, *pRule;
-	RuleSymbol **pSymbolPtr, *pNewSymbol;
-
-	Rule **pRulePtr = &pHead;
-	for (int i = 0; i < nRuleCount; i++)
-	{
-		*pRulePtr = CreateRule(ruleNameArr[i]);
-		pRulePtr = &(*pRulePtr)->pNextRule;
-	}
-
-	pRule = pHead;
-	for (int i = 0; i < nRuleCount; i++)
-	{
-		pSymbolPtr = &pRule->pFirstSymbol;
-
-		int start = 0;
-		for (int j = 0; rule_table_ci[i][j] != '\0'; j++)
-		{
-			if (rule_table_ci[i][j] == ' ' && rule_table_ci[i][j + 1] == '-' && rule_table_ci[i][j + 2] == '>' && rule_table_ci[i][j + 3] == ' ')
-			{
-				start = j + 4;
-				break;
-			}
-		}
-
-		for (int k = start; rule_table_ci[i][k] != '\0'; k++)
-		{
-			if (rule_table_ci[i][k] == ' ')
-			{
-				continue;
-			}
-
-			pNewSymbol = CreateSymbol();
-			char tokenName[MAX_STR_LENGTH] = {0};
-
-			for (int m = 0;; m++)
-			{
-				if (rule_table_ci[i][k] == ' ' || rule_table_ci[i][k] == '\0' || rule_table_ci[i][k] == '\n')
-				{
-					tokenName[m] = '\0';
-					break;
-				}
-				tokenName[m] = rule_table_ci[i][k++];
-			}
-
-			strcpy(pNewSymbol->SymbolName, tokenName);
-
-			pNewSymbol->isToken = 1;
-			for (int n = 0; n < nRuleCount; n++)
-			{
-				if (strcmp(pNewSymbol->SymbolName, ruleNameArr[n]) == 0)
-				{
-					pNewSymbol->isToken = 0;
-					break;
-				}
-			}
-
 			*pSymbolPtr = pNewSymbol;
 
 			pSymbolPtr = &pNewSymbol->pNextSymbol;

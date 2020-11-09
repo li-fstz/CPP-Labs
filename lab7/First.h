@@ -57,7 +57,6 @@ int AddSetToSet(Set *pDesSet, const Set *pSrcSet);
 int SetHasVoid(const Set *pSet);
 
 Rule *InitRules();
-Rule *InitRules_CI();
 Rule *CreateRule(const char *pRuleName);
 RuleSymbol *CreateSymbol();
 

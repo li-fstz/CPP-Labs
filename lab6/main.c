@@ -13,11 +13,7 @@ int main(int argc, char *argv[])
 	//
 	// 调用 InitRules 函数初始化文法
 	//
-#ifdef CODECODE_CI
-	Rule *pHead = InitRules_CI(); // 此行代码在线上流水线运行
-#else
-	Rule *pHead = InitRules(); // 此行代码在 CP Lab 中运行
-#endif
+	Rule *pHead = InitRules();
 
 	//
 	// 输出提取左因子之前的文法
@@ -329,115 +325,6 @@ Rule *InitRules()
 			}
 
 			pSymbolPtr1 = &(*pSymbolPtr1)->pOther;
-		}
-
-		pRule = pRule->pNextRule;
-	}
-
-	return pHead;
-}
-
-/*
-功能：
-	初始化文法链表(在执行流水线时调用)。
-	
-返回值：
-	文法的头指针。
-*/
-Rule *InitRules_CI()
-{
-	int nRuleCount = 0;
-	for (int i = 0; i < 20; i++)
-	{
-		gets(rule_table_ci[i]);
-		int length = strlen(rule_table_ci[i]);
-		if (length == 0)
-		{
-			break;
-		}
-
-		for (int j = 0; j < length; j++)
-		{
-			if (rule_table_ci[i][j] == ' ')
-			{
-				ruleNameArr[i][j] = '\0';
-				break;
-			}
-			ruleNameArr[i][j] = rule_table_ci[i][j];
-		}
-
-		nRuleCount++;
-	}
-
-	Rule *pHead, *pRule;
-	RuleSymbol **pSymbolPtr1, **pSymbolPtr2;
-
-	int i, j, k;
-
-	Rule **pRulePtr = &pHead;
-	for (i = 0; i < nRuleCount; i++)
-	{
-		*pRulePtr = CreateRule(ruleNameArr[i]);
-		pRulePtr = &(*pRulePtr)->pNextRule;
-	}
-
-	pRule = pHead;
-	for (i = 0; i < nRuleCount; i++)
-	{
-		pSymbolPtr1 = &pRule->pFirstSymbol;
-
-		int start = 0;
-		for (int j = 0; rule_table_ci[i][j] != '\0'; j++)
-		{
-			if (rule_table_ci[i][j] == ' ' && rule_table_ci[i][j + 1] == '-' && rule_table_ci[i][j + 2] == '>' && rule_table_ci[i][j + 3] == ' ')
-			{
-				start = j + 4;
-				break;
-			}
-		}
-
-		for (k = start; rule_table_ci[i][k] != '\0'; k++)
-		{
-			if (rule_table_ci[i][k] == '|')
-			{
-				pSymbolPtr1 = &(*pSymbolPtr1)->pOther;
-				pSymbolPtr2 = pSymbolPtr1;
-				continue;
-			}
-			if (rule_table_ci[i][k] == ' ')
-			{
-				continue;
-			}
-			if (k == start)
-			{
-				pSymbolPtr2 = pSymbolPtr1;
-			}
-
-			*pSymbolPtr2 = CreateSymbol();
-
-			char tokenName[MAX_STR_LENGTH] = {0};
-			tokenName[0] = rule_table_ci[i][k];
-			tokenName[1] = '\0';
-			(*pSymbolPtr2)->isToken = 1;
-			for (int m = 0; m < nRuleCount; m++)
-			{
-				if (strcmp(tokenName, ruleNameArr[m]) == 0)
-				{
-					(*pSymbolPtr2)->isToken = 0;
-					(*pSymbolPtr2)->pRule = FindRule(pHead, tokenName);
-					if (NULL == (*pSymbolPtr2)->pRule)
-					{
-						printf("Init rules error, miss rule \"%s\"\n", tokenName);
-						exit(1);
-					}
-				}
-			}
-			if ((*pSymbolPtr2)->isToken == 1)
-			{
-				strcpy((*pSymbolPtr2)->TokenName, tokenName);
-			}
-
-			pSymbolPtr2 = &(*pSymbolPtr2)->pNextSymbol;
 		}
 
 		pRule = pRule->pNextRule;

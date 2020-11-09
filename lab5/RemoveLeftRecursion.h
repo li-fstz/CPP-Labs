@@ -39,7 +39,6 @@ typedef struct _Rule
 //
 
 Rule *InitRules();
-Rule *InitRules_CI();
 Rule *CreateRule(const char *pRuleName);
 RuleSymbol *CreateSymbol();
 Rule *FindRule(Rule *pHead, const char *RuleName);
