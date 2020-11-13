@@ -331,11 +331,8 @@ Rule *InitRules()
 
 				*pSymbolPtr2 = CreateSymbol();
 				(*pSymbolPtr2)->isToken = pSymbol->isToken;
-				if (1 == pSymbol->isToken)
-				{
-					strcpy((*pSymbolPtr2)->TokenName, pSymbol->Name);
-				}
-				else
+				strcpy((*pSymbolPtr2)->SymbolName, pSymbol->Name);
+				if (!pSymbol->isToken)
 				{
 					(*pSymbolPtr2)->pRule = FindRule(pHead, pSymbol->Name);
 					if (NULL == (*pSymbolPtr2)->pRule)
@@ -392,7 +389,7 @@ RuleSymbol *CreateSymbol()
 	pSymbol->pNextSymbol = NULL;
 	pSymbol->pOther = NULL;
 	pSymbol->isToken = -1;
-	pSymbol->TokenName[0] = '\0';
+	pSymbol->SymbolName[0] = '\0';
 	pSymbol->pRule = NULL;
 
 	return pSymbol;

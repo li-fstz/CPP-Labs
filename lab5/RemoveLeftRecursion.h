@@ -23,7 +23,7 @@ typedef struct _RuleSymbol
 	struct _RuleSymbol *pNextSymbol; // 指向下一个 Symbol
 	struct _RuleSymbol *pOther;		 // 指向下一个 Select
 	int isToken;					 // 是否为终结符。1 表示终结符，0 表示非终结符
-	char TokenName[MAX_STR_LENGTH];	 // 终结符的名称。isToken 为 1 时这个域有效
+	char SymbolName[MAX_STR_LENGTH]; // 终结符和非终结符的名称
 	struct _Rule *pRule;			 // 指向 Symbol 对应的 Rule。isToken 为 0 时这个域有效
 } RuleSymbol;
 
