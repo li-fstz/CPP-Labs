@@ -212,8 +212,8 @@ void Follow(const Rule *pHead, SetList *pFollowSetList, SetList *pFirstSetList)
 				}
 				else
 				{
-					// 调用 AddTerminalToSet 函数将 EndSymbol 加入到 TempFirstSet 中
-					AddTerminalToSet(&TempFirstSet, EndSymbol);
+					// 调用 AddTerminalToSet 函数将 VoidSymbol 加入到 TempFirstSet 中
+					AddTerminalToSet(&TempFirstSet, VoidSymbol);
 				}
 
 				// 调用 GetSet 函数在 pFollowSetList 中查找 Set
