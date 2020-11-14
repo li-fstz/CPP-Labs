@@ -1,343 +1,477 @@
-#include "First.h"
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
-const char *VoidSymbol = "$"; // "ε"
+#include "RemoveLeftRecursion.h"
+
+const char* VoidSymbol = "$";  // "ε"
+const char* Postfix = "'";
 
 char rule_table_ci[20][256];
 char ruleNameArr[20][64];
 
-int main(int argc, char *argv[])
-{
-	//
-	// 调用 InitRules 函数初始化文法
-	//
-	Rule *pHead = InitRules();
+int main(int argc, char* argv[]) {
+    //
+    // 调用 InitRules 函数初始化文法
+    //
+    Rule* pHead = InitRules();
 
-	//
-	// 输出文法
-	//
-	PrintRule(pHead);
+    //
+    // 输出消除左递归之前的文法
+    //
+    printf("Before Remove Left Recursion:\n");
+    PrintRule(pHead);
 
-	//
-	// 调用 First 函数求文法的 First 集合
-	//
-	SetList FirstSet;
-	FirstSet.nSetCount = 0;
-	First(pHead, &FirstSet);
+    //
+    // 调用 RemoveLeftRecursion 函数消除文法中的左递归
+    //
+    RemoveLeftRecursion(pHead);
 
-	//
-	// 输出First集合
-	//
-	PrintFirstSet(&FirstSet);
+    //
+    // 输出消除左递归之后的文法
+    //
+    printf("\nAfter Remove Left Recursion:\n");
+    PrintRule(pHead);
 
-	return 0;
+    return 0;
 }
 
 /*
 功能：
-	添加一个 Set 到 SetList。
+        判断当前 Rule 中的一个 Symbol 是否需要被替换。
+        如果 Symbol 是一个非终结符，且 Symbol 对应的
+        Rule 在当前 Rule 之前，就需要被替换。
 
 参数：
-	pSetList -- SetList 指针。
-	pName -- 集合名称字符串指针。 
-*/
-void AddOneSet(SetList *pSetList, const char *pName)
-{
+        pCurRule -- 当前 Rule 的指针。
+        pSymbol -- Symbol 指针。
 
-	//
-	// TODO: 在此添加代码
-	//
-}
-
-/*
-功能：
-	根据名称在 SetList 中查找 Set。
-
-参数：
-	pSetList -- SetList 指针。
-	pName -- 集合名称字符串指针。
-	  
 返回值：
-	如果找到返回 Set 的指针，否则返回 NULL。
+        需要替换返回 1。
+        不需要替换返回 0。
 */
-Set *GetSet(SetList *pSetList, const char *pName)
-{
-
-	//
-	// TODO: 在此添加代码
-	//
+int SymbolNeedReplace(const Rule* pCurRule, const RuleSymbol* pSymbol) {
+    if (pSymbol->isToken) {
+        return 0;
+    } else {
+        Rule* pTmp = pSymbol->pRule->pNextRule;
+        while (pTmp) {
+            if (pCurRule == pTmp) {
+                return 1;
+            } else {
+                pTmp = pTmp->pNextRule;
+            }
+        }
+        return 0;
+    }
 }
 
 /*
 功能：
-	添加一个终结符到 Set。
+        拷贝一个 Symbol。
 
 参数：
-	pSet -- Set 指针。
-	pTerminal -- 终结符名称指针。
-	  
+        pSymbolTemplate -- 需要被拷贝的 Symbol 指针。
+
 返回值：
-	添加成功返回 1。
-	添加不成功返回 0。
+        拷贝获得的新 Symbol 的指针。
 */
-int AddTerminalToSet(Set *pSet, const char *pTerminal)
-{
-
-	//
-	// TODO: 在此添加代码
-	//
+RuleSymbol* CopySymbol(const RuleSymbol* pSymbolTemplate) {
+    RuleSymbol* pTmp = CreateSymbol();
+    pTmp->isToken = pSymbolTemplate->isToken;
+    pTmp->pNextSymbol = pSymbolTemplate->pNextSymbol;
+    pTmp->pOther = pSymbolTemplate->pOther;
+    pTmp->pRule = pSymbolTemplate->pRule;
+    strcpy(pTmp->SymbolName, pSymbolTemplate->SymbolName);
+    return pTmp;
 }
 
 /*
 功能：
-	将源 Set 中的所有终结符添加到目标 Set 中。
+        拷贝一个 Select。
 
 参数：
-	pDesSet -- 目标 Set 指针。
-	pSrcSet -- 源 Set 指针。
-	  
+        pSelectTemplate -- 需要被拷贝的 Select 指针。
+
 返回值：
-	添加成功返回 1，否则返回 0。
+        拷贝获得的新 Select 的指针。
 */
-int AddSetToSet(Set *pDesSet, const Set *pSrcSet)
-{
-
-	//
-	// TODO: 在此添加代码
-	//
+RuleSymbol* CopySelect(const RuleSymbol* pSelectTemplate) {
+    RuleSymbol *pHead = CopySymbol(pSelectTemplate), *pTmp = pHead;
+    while (pSelectTemplate->pNextSymbol) {
+        pSelectTemplate = pSelectTemplate->pNextSymbol;
+        pTmp->pNextSymbol = CopySymbol(pSelectTemplate);
+        pTmp = pTmp->pNextSymbol;
+    }
+    return pHead;
 }
 
 /*
 功能：
-	判断 Set 的终结符中是否含有ε。
+        替换一个 Select 的第一个 Symbol。
 
 参数：
-	pSet -- Set 指针。
-	  
+        pSelectTemplate -- 需要被替换的 Select 指针。
+
 返回值：
-	存在返回 1。
-	不存在返回 0。
+        替换后获得的新 Select 的指针。
+        注意，替换后可能会有一个新的 Select，
+        也可能会有多个 Select 链接在一起。
 */
-int SetHasVoid(const Set *pSet)
-{
-
-	//
-	// TODO: 在此添加代码
-	//
+RuleSymbol* ReplaceSelect(const RuleSymbol* pSelectTemplate) {
+    RuleSymbol *pSelectsOfFirstSymble =
+                   CopySelect(pSelectTemplate->pRule->pFirstSymbol),
+               *pTmpSelect = pSelectsOfFirstSymble;
+    while (pTmpSelect) {
+        RuleSymbol* pTmpSymble = pTmpSelect;
+        while (pTmpSymble->pNextSymbol) {
+            pTmpSymble = pTmpSymble->pNextSymbol;
+        }
+        pTmpSymble->pNextSymbol = CopySelect(pSelectTemplate->pNextSymbol);
+        if (pTmpSelect->pOther) {
+            pTmpSelect->pOther = CopySelect(pTmpSelect->pOther);
+        }
+        pTmpSelect = pTmpSelect->pOther;
+    }
+    return pSelectsOfFirstSymble;
 }
 
 /*
 功能：
-	求文法的 First 集合。
+        释放一个 Select 的内存。
 
 参数：
-	pHead -- 文法的头指针。
-	pFirstSetList -- First 集合指针。
+        pSelect -- 需要释放的 Select 的指针。
 */
-void First(const Rule *pHead, SetList *pFirstSetList)
-{
-	const Rule *pRule;	 // Rule 指针
-	int isChange;		 // 集合是否被修改的标志
-	RuleSymbol *pSymbol; // Symbol 游标
-
-	// 使用文法链表初始化 First 集合
-	for (pRule = pHead; pRule != NULL; pRule = pRule->pNextRule)
-	{
-		AddOneSet(pFirstSetList, pRule->RuleName);
-	}
-
-	do
-	{
-		isChange = 0; // 设置修改标志
-
-		for (pRule = pHead; pRule != NULL; pRule = pRule->pNextRule)
-		{
-			// 根据文法名称在 pFirstSetList 中查找 Set
-			Set *pDesSet = GetSet(pFirstSetList, pRule->RuleName);
-
-			int hasVoid = 1; // First 集合中是否含有ε的标志
-			for (pSymbol = pRule->pFirstSymbol; pSymbol != NULL && hasVoid; pSymbol = pSymbol->pNextSymbol)
-			{
-				if (pSymbol->isToken) // 终结符
-				{
-					// 调用 AddTerminalToSet 函数将终结符添加到 pDesSet，并设置修改标志
-					if (AddTerminalToSet(pDesSet, pSymbol->SymbolName))
-						isChange = 1;
-
-					hasVoid = 0; // 设置 First 集合中是否含有ε的标志
-				}
-				else // 非终结符
-				{
-					// 根据非终结符名称在 pFirstSetList 中查找 Set
-					Set *pSrcSet = GetSet(pFirstSetList, pSymbol->SymbolName);
-
-					// 调用 AddSetToSet 函数，将源 Set 中的所有终结符添加到目标 Set 中，并设置修改标志
-					if (AddSetToSet(pDesSet, pSrcSet))
-						isChange = 1;
-
-					// 调用 SetHasVoid 函数，判断源 Set 中是否含有ε
-					hasVoid = SetHasVoid(pSrcSet);
-				}
-			}
-			if (hasVoid)
-			{
-				// 调用 AddTerminalToSet 函数将ε加入到目标集合中
-				AddTerminalToSet(pDesSet, VoidSymbol);
-			}
-		}
-	} while (isChange);
+void FreeSelect(RuleSymbol* pSelect) {
+    if (pSelect->pNextSymbol) {
+        FreeSelect(pSelect->pNextSymbol);
+    } else {
+        free(pSelect);
+    }
 }
 
-typedef struct _SYMBOL
-{
-	int isToken;
-	char SymbolName[MAX_STR_LENGTH];
+/*
+功能：
+        判断一条 Rule 是否存在左递归。
+
+参数：
+        prRule -- Rule 指针。
+
+返回值：
+        存在返回 1。
+        不存在返回 0。
+*/
+int SelectHasLeftRecursion(RuleSymbol* pSelect, Rule* pRule) {
+    if (pSelect->isToken) {
+        return 0;
+    } else {
+        return pSelect->pRule == pRule;
+    }
+}
+int RuleHasLeftRecursion(Rule* pRule) {
+    RuleSymbol* pTmp = pRule->pFirstSymbol;
+    while (pTmp) {
+        if (SelectHasLeftRecursion(pTmp, pRule)) {
+            return 1;
+        }
+        pTmp = pTmp->pOther;
+    }
+    return 0;
+}
+
+/*
+功能：
+        将一个 Symbol 添加到 Select 的末尾。
+
+参数：
+        pSelect -- Select 指针。
+        pNewSymbol -- Symbol 指针。
+*/
+void AddSymbolToSelect(RuleSymbol* pSelect, RuleSymbol* pNewSymbol) {
+    while (pSelect->pNextSymbol) {
+        pSelect = pSelect->pNextSymbol;
+    }
+    pSelect->pNextSymbol = pNewSymbol;
+}
+
+/*
+功能：
+        将一个 Select 加入到文法末尾，当 Select 为 NULL
+时就将一个ε终结符加入到文法末尾。
+
+参数：
+        pRule -- 文法指针。
+        pNewSelect -- Select 指针。
+*/
+void AddSelectToRule(Rule* pRule, RuleSymbol* pNewSelect) {
+    if (!pNewSelect) {
+        pNewSelect = CreateSymbol();
+        pNewSelect->isToken = 1;
+        strcpy(pNewSelect->SymbolName, VoidSymbol);
+    }
+    if (pRule->pFirstSymbol) {
+        RuleSymbol* pTmp = pRule->pFirstSymbol;
+        while (pTmp->pOther) {
+            pTmp = pTmp->pOther;
+        }
+        pTmp->pOther = pNewSelect;
+    } else {
+        pRule->pFirstSymbol = pNewSelect;
+    }
+}
+
+/*
+功能：
+        消除左递归。
+
+参数：
+        pHead -- 文法链表的头指针。
+*/
+void RemoveLeftRecursion(Rule* pHead) {
+    Rule* pRule;                 // Rule 游标
+    RuleSymbol* pSelect;         // Select 游标
+    Rule* pNewRule;              // Rule 指针
+    int isChange;                // Rule 是否被替换的标记
+    RuleSymbol** pSelectPrePtr;  // Symbol 指针的指针
+
+    for (pRule = pHead; pRule != NULL; pRule = pRule->pNextRule) {
+        //
+        // 替换
+        //
+        do {
+            isChange = 0;
+
+            // 在 Rule 的所有 Select 中查找是否需要替换
+            for (pSelect = pRule->pFirstSymbol,
+                pSelectPrePtr = &pRule->pFirstSymbol;
+                 pSelect != NULL;
+                 pSelectPrePtr = &pSelect->pOther, pSelect = pSelect->pOther) {
+                if (SymbolNeedReplace(
+                        pRule,
+                        pSelect))  // 判断 Select 的第一个 Symbol 是否需要替换
+                {
+                    isChange = 1;
+
+                    // 调用 ReplaceSelect 函数，替换 Select 的第一个 Symbol
+                    // 后得到新的 Selects
+                    RuleSymbol* pNewSelects = ReplaceSelect(pSelect);
+
+                    // 使用新的 Selects 替换原有的 Select，并调用 FreeSelect
+                    // 函数释放原有的 Select 内存
+                    *pSelectPrePtr = pNewSelects;
+                    while (pNewSelects->pOther) {
+                        pNewSelects = pNewSelects->pOther;
+                    }
+                    pNewSelects->pOther = pSelect->pOther;
+                    FreeSelect(pSelect);
+                    break;
+                }
+
+                if (isChange) break;
+            }
+        } while (isChange);
+
+        // 忽略没有左递归的 Rule;
+        if (!RuleHasLeftRecursion(pRule)) continue;
+
+        //
+        // 消除左递归
+        //
+        pNewRule = CreateRule(pHead->RuleName);  // 创建新 Rule
+        strcat(pNewRule->RuleName, Postfix);
+
+        pSelect = pRule->pFirstSymbol;  // 初始化 Select 游标
+        pSelectPrePtr = &pRule->pFirstSymbol;
+        while (pSelect != NULL)  // 循环处理所有的 Select
+        {
+            if (0 == pSelect->isToken &&
+                pSelect->pRule == pRule)  // Select 存在左递归
+            {
+                // 移除包含左递归的 Select，将其转换为右递归后添加到新 Rule
+                // 的末尾，并移动游标
+                *pSelectPrePtr = (*pSelectPrePtr)->pOther;
+                pSelect = pSelect->pNextSymbol;
+                RuleSymbol* pTmp = CreateSymbol();
+                pTmp->isToken = 0;
+                pTmp->pRule = pNewRule;
+                AddSymbolToSelect(pSelect, pTmp);
+                AddSelectToRule(pNewRule, pSelect);
+                pSelect = *pSelectPrePtr;
+            } else  // Select 不存在左递归
+            {
+                // 在没有左递归的 Select 末尾添加指向新 Rule
+                // 的非终结符，并移动游标
+                RuleSymbol* pTmp = CreateSymbol();
+                pTmp->isToken = 0;
+                pTmp->pRule = pNewRule;
+                AddSymbolToSelect(pSelect, pTmp);
+                pSelectPrePtr = &(*pSelectPrePtr)->pOther;
+                pSelect = pSelect->pOther;
+            }
+        }
+
+        // 在新 Rule 的最后加入ε(用 '$' 代替)
+        // 将新 Rule 插入文法链表
+        AddSelectToRule(pNewRule, NULL);
+        pNewRule->pNextRule = pRule->pNextRule;
+        pRule->pNextRule = pNewRule;
+        pRule = pNewRule;
+    }
+}
+
+/*
+功能：
+        使用给定的数据初始化文法链表
+
+返回值：
+        Rule 指针
+*/
+typedef struct _SYMBOL {
+    int isToken;
+    char Name[MAX_STR_LENGTH];
 } SYMBOL;
 
-typedef struct _RULE_ENTRY
-{
-	char RuleName[MAX_STR_LENGTH];
-	SYMBOL Symbols[64];
+typedef struct _RULE_ENTRY {
+    char RuleName[MAX_STR_LENGTH];
+    SYMBOL Selects[64][64];
 } RULE_ENTRY;
 
-/* exp -> exp addop term| term 
-   addop -> + | - 
-   term -> term mulop factor | factor 
-   mulop -> * 
-   factor -> (exp) | number */
-static const RULE_ENTRY rule_table[] =
-	{{"exp", {{0, "exp"}, {0, "addop"}, {0, "term"}}},
-	 {"exp", {{0, "term"}}},
-	 {"addop", {{1, "+"}}},
-	 {"addop", {{1, "-"}}},
-	 {"term", {{0, "term"}, {0, "mulop"}, {0, "factor"}}},
-	 {"term", {{0, "factor"}}},
-	 {"mulop", {{1, "*"}}},
-	 {"factor", {{1, "("}, {0, "exp"}, {1, ")"}}},
-	 {"factor", {{1, "number"}}}};
+/* A -> Ba | Aa | c
+   B -> Bb | Ab | d */
+static const RULE_ENTRY rule_table[] = {
+    {"A", {{{0, "B"}, {1, "a"}}, {{0, "A"}, {1, "a"}}, {{1, "c"}}}},
+    {"B", {{{0, "B"}, {1, "b"}}, {{0, "A"}, {1, "b"}}, {{1, "d"}}}}};
 
 /*
 功能：
-	初始化文法链表。
-	
+        初始化文法链表。
+
 返回值：
-	文法的头指针。
+        文法的头指针。
 */
-Rule *InitRules()
-{
-	Rule *pHead, *pRule;
-	RuleSymbol **pSymbolPtr, *pNewSymbol;
-	int nRuleCount = sizeof(rule_table) / sizeof(rule_table[0]);
-	int i, j;
+Rule* InitRules() {
+    Rule *pHead, *pRule;
+    RuleSymbol **pSymbolPtr1, **pSymbolPtr2;
+    int nRuleCount = sizeof(rule_table) / sizeof(rule_table[0]);
+    int i, j, k;
 
-	Rule **pRulePtr = &pHead;
-	for (i = 0; i < nRuleCount; i++)
-	{
-		*pRulePtr = CreateRule(rule_table[i].RuleName);
-		pRulePtr = &(*pRulePtr)->pNextRule;
-	}
+    Rule** pRulePtr = &pHead;
+    for (i = 0; i < nRuleCount; i++) {
+        *pRulePtr = CreateRule(rule_table[i].RuleName);
+        pRulePtr = &(*pRulePtr)->pNextRule;
+    }
 
-	pRule = pHead;
-	for (i = 0; i < nRuleCount; i++)
-	{
-		pSymbolPtr = &pRule->pFirstSymbol;
-		for (j = 0; rule_table[i].Symbols[j].SymbolName[0] != '\0'; j++)
-		{
-			const SYMBOL *pSymbol = &rule_table[i].Symbols[j];
+    pRule = pHead;
+    for (i = 0; i < nRuleCount; i++) {
+        pSymbolPtr1 = &pRule->pFirstSymbol;
+        for (j = 0; rule_table[i].Selects[j][0].Name[0] != '\0'; j++) {
+            pSymbolPtr2 = pSymbolPtr1;
+            for (k = 0; rule_table[i].Selects[j][k].Name[0] != '\0'; k++) {
+                const SYMBOL* pSymbol = &rule_table[i].Selects[j][k];
 
-			pNewSymbol = CreateSymbol();
-			pNewSymbol->isToken = pSymbol->isToken;
-			strcpy(pNewSymbol->SymbolName, pSymbol->SymbolName);
-			*pSymbolPtr = pNewSymbol;
+                *pSymbolPtr2 = CreateSymbol();
+                (*pSymbolPtr2)->isToken = pSymbol->isToken;
+                strcpy((*pSymbolPtr2)->SymbolName, pSymbol->Name);
+                if (!pSymbol->isToken) {
+                    (*pSymbolPtr2)->pRule = FindRule(pHead, pSymbol->Name);
+                    if (NULL == (*pSymbolPtr2)->pRule) {
+                        printf("Init rules error, miss rule \"%s\"\n",
+                               pSymbol->Name);
+                        exit(1);
+                    }
+                }
 
-			pSymbolPtr = &pNewSymbol->pNextSymbol;
-		}
+                pSymbolPtr2 = &(*pSymbolPtr2)->pNextSymbol;
+            }
 
-		pRule = pRule->pNextRule;
-	}
+            pSymbolPtr1 = &(*pSymbolPtr1)->pOther;
+        }
 
-	return pHead;
+        pRule = pRule->pNextRule;
+    }
+
+    return pHead;
 }
 
 /*
 功能：
-	创建一个新的文法。
-	
-参数：
-	pRuleName -- 文法的名字。	
-	
-返回值：
-	文法的指针。
-*/
-Rule *CreateRule(const char *pRuleName)
-{
-	Rule *pRule = (Rule *)malloc(sizeof(Rule));
-
-	strcpy(pRule->RuleName, pRuleName);
-	pRule->pFirstSymbol = NULL;
-	pRule->pNextRule = NULL;
-
-	return pRule;
-}
-
-/*
-功能：
-	创建一个新的符号。
-	
-返回值：
-	符号的指针。
-*/
-RuleSymbol *CreateSymbol()
-{
-	RuleSymbol *pSymbol = (RuleSymbol *)malloc(sizeof(RuleSymbol));
-
-	pSymbol->pNextSymbol = NULL;
-	pSymbol->isToken = -1;
-	pSymbol->SymbolName[0] = '\0';
-
-	return pSymbol;
-}
-
-/*
-功能：
-	输出文法。
-	
-参数：
-	pHead -- 文法的头指针。
-*/
-void PrintRule(const Rule *pHead)
-{
-
-	//
-	// TODO: 在此添加代码
-	//
-}
-
-/*
-功能：
-	输出 First 集合。
+        创建一个新的 Rule。
 
 参数：
-	pFirstSetList -- First 集合指针。
+        pRuleName -- 文法的名字。
+
+返回值：
+        Rule 指针
 */
-void PrintFirstSet(SetList *pFirstSetList)
-{
-	printf("\nThe First Set:\n");
-	for (int i = 0; i < pFirstSetList->nSetCount; i++)
-	{
-		printf("First(%s) = { ", pFirstSetList->Sets[i].Name);
-		for (int j = 0; j < pFirstSetList->Sets[i].nTerminalCount; j++)
-		{
-			if (j == pFirstSetList->Sets[i].nTerminalCount - 1)
-			{
-				printf("%s ", pFirstSetList->Sets[i].Terminal[j]);
-			}
-			else
-			{
-				printf("%s, ", pFirstSetList->Sets[i].Terminal[j]);
-			}
-		}
-		printf("}\n");
-	}
+Rule* CreateRule(const char* pRuleName) {
+    Rule* pRule = (Rule*)malloc(sizeof(Rule));
+
+    strcpy(pRule->RuleName, pRuleName);
+    pRule->pFirstSymbol = NULL;
+    pRule->pNextRule = NULL;
+
+    return pRule;
+}
+
+/*
+功能：
+        创建一个新的 Symbol。
+
+返回值：
+        RuleSymbol 指针
+*/
+RuleSymbol* CreateSymbol() {
+    RuleSymbol* pSymbol = (RuleSymbol*)malloc(sizeof(RuleSymbol));
+
+    pSymbol->pNextSymbol = NULL;
+    pSymbol->pOther = NULL;
+    pSymbol->isToken = -1;
+    pSymbol->SymbolName[0] = '\0';
+    pSymbol->pRule = NULL;
+
+    return pSymbol;
+}
+
+/*
+功能：
+        根据 RuleName 在文法链表中查找名字相同的文法。
+
+参数：
+        pHead -- 文法的头指针。
+        RuleName -- 文法的名字。
+
+返回值：
+        Rule 指针
+*/
+Rule* FindRule(Rule* pHead, const char* RuleName) {
+    Rule* pRule;
+    for (pRule = pHead; pRule != NULL; pRule = pRule->pNextRule) {
+        if (0 == strcmp(pRule->RuleName, RuleName)) {
+            break;
+        }
+    }
+
+    return pRule;
+}
+
+/*
+功能：
+        输出文法。
+
+参数：
+        pHead -- 文法的头指针。
+*/
+void PrintRule(Rule* pHead) {
+    if (pHead) {
+        printf("%s->", pHead->RuleName);
+        for (RuleSymbol* pSelect = pHead->pFirstSymbol; pSelect != NULL;
+             pSelect = pSelect->pOther) {
+            for (RuleSymbol* pSymble = pSelect; pSymble != NULL;
+                 pSymble = pSymble->pNextSymbol) {
+                printf("%s", pSymble->SymbolName);
+            }
+            putchar(pSelect->pOther ? '|' : '\n');
+        }
+        PrintRule(pHead->pNextRule);
+    }
 }
