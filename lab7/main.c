@@ -277,13 +277,17 @@ void RemoveLeftRecursion(Rule* pHead) {
         //
         // 消除左递归
         //
-        pNewRule = CreateRule(pHead->RuleName);  // 创建新 Rule
+        pNewRule = CreateRule(pRule->RuleName);  // 创建新 Rule
         strcat(pNewRule->RuleName, Postfix);
 
         pSelect = pRule->pFirstSymbol;  // 初始化 Select 游标
         pSelectPrePtr = &pRule->pFirstSymbol;
         while (pSelect != NULL)  // 循环处理所有的 Select
         {
+            RuleSymbol* pTmp = CreateSymbol();
+            pTmp->isToken = 0;
+            pTmp->pRule = pNewRule;
+            strcpy(pTmp->SymbolName, pNewRule->RuleName);
             if (0 == pSelect->isToken &&
                 pSelect->pRule == pRule)  // Select 存在左递归
             {
@@ -291,9 +295,6 @@ void RemoveLeftRecursion(Rule* pHead) {
                 // 的末尾，并移动游标
                 *pSelectPrePtr = (*pSelectPrePtr)->pOther;
                 pSelect = pSelect->pNextSymbol;
-                RuleSymbol* pTmp = CreateSymbol();
-                pTmp->isToken = 0;
-                pTmp->pRule = pNewRule;
                 AddSymbolToSelect(pSelect, pTmp);
                 AddSelectToRule(pNewRule, pSelect);
                 pSelect = *pSelectPrePtr;
@@ -301,9 +302,6 @@ void RemoveLeftRecursion(Rule* pHead) {
             {
                 // 在没有左递归的 Select 末尾添加指向新 Rule
                 // 的非终结符，并移动游标
-                RuleSymbol* pTmp = CreateSymbol();
-                pTmp->isToken = 0;
-                pTmp->pRule = pNewRule;
                 AddSymbolToSelect(pSelect, pTmp);
                 pSelectPrePtr = &(*pSelectPrePtr)->pOther;
                 pSelect = pSelect->pOther;

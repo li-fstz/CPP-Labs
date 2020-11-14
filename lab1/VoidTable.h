@@ -51,7 +51,7 @@ Rule *FindRule(Rule *pHead, const char *RuleName);
 Column *InitVoidTable(Rule *pRule);
 
 void VoidTable(Rule *pRuleHead, Column *pTableHead);
-Column *FindColumn(char *RuleName, Column *pTableHead);
+Column *FindColumn(Column *pTableHead, char *RuleName);
 
 void PrintRule(Rule *pHead);
 void PrintTable(Column *pHead);
