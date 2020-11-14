@@ -139,6 +139,9 @@ void VoidTable(Rule *pRuleHead, Column *pTableHead) {
                 *pRulePrePtr = pRule->pNextRule;
                 // FreeRule(pRule);
                 pRule = *pRulePrePtr;
+            } else {
+                pRulePrePtr = &pRule->pNextRule;
+                pRule = pRule->pNextRule;
             }
         }
     } while (isChange);
