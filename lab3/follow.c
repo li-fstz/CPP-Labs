@@ -16,7 +16,7 @@
 返回值：
         添加成功返回 1，否则返回 0。
 */
-void RemoveVoidSymbol(Set *pSet) {
+void RemoveVoidFromSet(Set *pSet) {
     for (int i = 0; i < pSet->nTerminalCount; i++) {
         if (strcmp(pSet->Terminal[i], VoidSymbol) == 0) {
             if (i != pSet->nTerminalCount - 1) {
@@ -38,7 +38,7 @@ void RemoveVoidSymbol(Set *pSet) {
         pFollowSetList -- Follow 集合指针。
         pFirstSetList -- First 集合指针。
 */
-void Follow(const Rule *pHead, Column *pVoidTable, SetList *pFollowSetList,
+void Follow(const Rule *pHead, VoidTable *pVoidTable, SetList *pFollowSetList,
             SetList *pFirstSetList) {
     const Rule *pRule;    // Rule 指针
     int isChange;         // 集合是否被修改的标志
@@ -88,7 +88,7 @@ void Follow(const Rule *pHead, Column *pVoidTable, SetList *pFollowSetList,
 
                             // 将找到的 Set 加入 TempFirstSet 中
                             AddSetToSet(&TempFirstSet, pFirstSetXn);
-                            RemoveVoidSymbol(&TempFirstSet);
+                            RemoveVoidFromSet(&TempFirstSet);
                         }
                     } else {
                         if (AddSetToSet(

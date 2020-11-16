@@ -27,9 +27,9 @@ int main(int argc, char *argv[]) {
     //
     // 调用 VoidTable 函数求文法的空表
     //
-    Column *pVoidTable = InitVoidTable(pHead);
-    VoidTable(pHead, pVoidTable);
-    PrintTable(pVoidTable);
+    VoidTable VoidTable;
+    GenVoidTable(pHead, &VoidTable);
+    PrintTable(&VoidTable);
 
     //
     // 初始化 First 集合、Follow 集合
@@ -41,12 +41,7 @@ int main(int argc, char *argv[]) {
     //
     // 调用 Follow 函数求文法的 First 集合、Follow 集合
     //
-    Follow(pHead, pVoidTable, &FollowSetList, &FirstSetList);
-
-    //
-    // 输出文法
-    //
-    PrintRule(pHead);
+    Follow(pHead, &VoidTable, &FollowSetList, &FirstSetList);
 
     //
     // 输出Follow集合

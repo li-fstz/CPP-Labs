@@ -7,7 +7,7 @@
 // 在此处包含 C 标准库头文件
 //
 
-void Follow(const Rule *pHead, Column *pVoidTable, SetList *pFollowSetList,
+void Follow(const Rule *pHead, VoidTable *pVoidTable, SetList *pFollowSetList,
             SetList *pFirstSetList);
 void PrintFollowSet(SetList *pFollowSetList);
 

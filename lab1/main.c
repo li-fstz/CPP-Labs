@@ -32,13 +32,12 @@ int main(int argc, char *argv[]) {
     //
     // 调用 VoidTable 函数求文法的空表
     //
-    Column *pVoidTable = InitVoidTable(pHead);
-    VoidTable(pHead, pVoidTable);
-
+    VoidTable VoidTable;
+    GenVoidTable(pHead, &VoidTable);
     //
     // 输出空表
     //
     printf("\nThe Void Table:\n");
-    PrintTable(pVoidTable);
+    PrintTable(&VoidTable);
     return 0;
 }

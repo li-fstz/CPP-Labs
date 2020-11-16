@@ -6,34 +6,19 @@
 
 /*
 功能：
-    初始化空表。
-
-返回值：
-    空表的头指针。
-*/
-Column *InitVoidTable(Rule *pRule) {
-    Column *pHead, **pColumnPrePtr = &pHead;
-    for (; pRule != NULL; pRule = pRule->pNextRule) {
-        *pColumnPrePtr = (Column *)malloc(sizeof(Column));
-        strcpy((*pColumnPrePtr)->RuleName, pRule->RuleName);
-        (*pColumnPrePtr)->hasVoid = -1;
-        (*pColumnPrePtr)->pNextCol = NULL;
-        pColumnPrePtr = &(*pColumnPrePtr)->pNextCol;
-    }
-    return pHead;
-}
-
-/*
-功能：
     输出空表。
 
 参数：
     pHead -- 空表的头指针。
 */
-void PrintTable(Column *pHead) {
-    if (pHead) {
-        printf("%s\t%d\n", pHead->RuleName, pHead->hasVoid);
-        PrintTable(pHead->pNextCol);
+void PrintTable(VoidTable *pVoidTable) {
+    for (int i = 0; i < pVoidTable->ColCount; i++) {
+        printf("%s%c", pVoidTable->pTableHead[i],
+               i == pVoidTable->ColCount - 1 ? '\n' : '\t');
+    }
+    for (int i = 0; i < pVoidTable->ColCount; i++) {
+        printf("%d%c", pVoidTable->TableRows[0].hasVoid[i],
+               i == pVoidTable->ColCount - 1 ? '\n' : '\t');
     }
 }
 
@@ -43,9 +28,14 @@ void PrintTable(Column *pHead) {
 
 参数：
     pRuleHead -- 文法的头指针。
-    pTableHead -- 空表的头指针。
+    pVoidTable -- 空表的头指针。
 */
-void VoidTable(Rule *pRuleHead, Column *pTableHead) {
+void GenVoidTable(Rule *pRuleHead, VoidTable *pVoidTable) {
+    pVoidTable->pTableHead = GetNonTerminals(pRuleHead);
+    for (pVoidTable->ColCount = 0; pVoidTable->pTableHead[pVoidTable->ColCount];
+         pVoidTable->ColCount++) {
+        pVoidTable->TableRows[0].hasVoid[pVoidTable->ColCount] = -1;
+    }
     Rule *pCopiedRule = CopyRule(pRuleHead);
     Rule *pRule = pCopiedRule, **pRulePrePtr = &pCopiedRule;
     while (pRule != NULL) {
@@ -78,12 +68,12 @@ void VoidTable(Rule *pRuleHead, Column *pTableHead) {
             }
         }
         if (hasVoidSelect) {
-            FindColumn(pTableHead, pRule->RuleName)->hasVoid = 1;
+            *FindHasVoid(pVoidTable, pRule->RuleName) = 1;
             *pRulePrePtr = pRule->pNextRule;
             // FreeRule(pRule);
             pRule = *pRulePrePtr;
         } else if (pRule->pFirstSymbol == NULL) {
-            FindColumn(pTableHead, pRule->RuleName)->hasVoid = 0;
+            *FindHasVoid(pVoidTable, pRule->RuleName) = 0;
             *pRulePrePtr = pRule->pNextRule;
             // FreeRule(pRule);
             pRule = *pRulePrePtr;
@@ -106,8 +96,7 @@ void VoidTable(Rule *pRuleHead, Column *pTableHead) {
                 hasAllNotVoidSelect = 1;
                 hasVoidSelect = 0;
                 while (pSymble != NULL) {
-                    switch (
-                        FindColumn(pTableHead, pSymble->SymbolName)->hasVoid) {
+                    switch (*FindHasVoid(pVoidTable, pSymble->SymbolName)) {
                         case 1:
                             if (pSymble->pNextSymbol == NULL &&
                                 pSymblePrePtr == &pRule->pFirstSymbol) {
@@ -137,8 +126,7 @@ void VoidTable(Rule *pRuleHead, Column *pTableHead) {
             }
             if (hasAllNotVoidSelect || hasVoidSelect) {
                 isChange = 1;
-                FindColumn(pTableHead, pRule->RuleName)->hasVoid =
-                    hasVoidSelect;
+                *FindHasVoid(pVoidTable, pRule->RuleName) = hasVoidSelect;
                 *pRulePrePtr = pRule->pNextRule;
                 // FreeRule(pRule);
                 pRule = *pRulePrePtr;
@@ -155,17 +143,26 @@ void VoidTable(Rule *pRuleHead, Column *pTableHead) {
     根据 RuleName 在空表链表中查找名字相同的列。
 
 参数：
-    pTableHead -- 空表链表的头指针。
+    pVoidTable -- 空表链表的头指针。
     RuleName -- 文法的名字。
 
 返回值：
     如果存在名字相同的列返回 Column 指针，否则返回 NULL
 */
-Column *FindColumn(Column *pTableHead, const char *RuleName) {
-    for (; pTableHead != NULL; pTableHead = pTableHead->pNextCol) {
-        if (strcmp(pTableHead->RuleName, RuleName) == 0) {
-            return pTableHead;
+int *FindHasVoid(VoidTable *pTable, const char *RuleName) {
+    for (int i = 0; i < pTable->ColCount; i++) {
+        if (strcmp(pTable->pTableHead[i], RuleName) == 0) {
+            return pTable->TableRows[0].hasVoid + i;
         }
     }
-    return NULL;
+    return 0;
+}
+
+char **GetNonTerminals(const Rule *pRule) {
+    char **pNonTerminals = calloc(32, sizeof(char *));
+    for (int i = 0; pRule != NULL; pRule = pRule->pNextRule, i++) {
+        pNonTerminals[i] = malloc(MAX_STR_LENGTH);
+        strcpy(pNonTerminals[i], pRule->RuleName);
+    }
+    return pNonTerminals;
 }

@@ -37,7 +37,7 @@ void PrintFirstSet(SetList *pFirstSetList) {
         pHead -- 文法的头指针。
         pFirstSetList -- First 集合指针。
 */
-void First(const Rule *pHead, Column *pVoidTable, SetList *pFirstSetList) {
+void First(const Rule *pHead, VoidTable *pVoidTable, SetList *pFirstSetList) {
     const Rule *pRule;    // Rule 指针
     int isChange;         // 集合是否被修改的标志
     RuleSymbol *pSymbol;  // Symbol 游标
@@ -45,7 +45,7 @@ void First(const Rule *pHead, Column *pVoidTable, SetList *pFirstSetList) {
     // 使用文法链表初始化 First 集合
     for (pRule = pHead; pRule != NULL; pRule = pRule->pNextRule) {
         AddOneSet(pFirstSetList, pRule->RuleName);
-        if (FindColumn(pVoidTable, pRule->RuleName)->hasVoid) {
+        if (*FindHasVoid(pVoidTable, pRule->RuleName)) {
             AddTerminalToSet(pFirstSetList->Sets + pFirstSetList->nSetCount - 1,
                              VoidSymbol);
         }
@@ -80,9 +80,8 @@ void First(const Rule *pHead, Column *pVoidTable, SetList *pFirstSetList) {
                         // 中的所有终结符添加到目标 Set 中，并设置修改标志
                         if (AddSetToSet(pDesSet, pSrcSet)) isChange = 1;
 
-                        // 调用 SetHasVoid 函数，判断源 Set 中是否含有ε
                         hasVoid =
-                            FindColumn(pVoidTable, pSrcSet->Name)->hasVoid;
+                            *FindHasVoid(pVoidTable, pSrcSet->Name);
                     }
                 }
             }

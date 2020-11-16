@@ -34,16 +34,17 @@ int main(int argc, char *argv[]) {
     //
     // 调用 VoidTable 函数求文法的空表
     //
-    Column *pVoidTable = InitVoidTable(pHead);
-    VoidTable(pHead, pVoidTable);
-    PrintTable(pVoidTable);
+    
+    VoidTable VoidTable;
+    GenVoidTable(pHead, &VoidTable);
+    PrintTable(&VoidTable);
 
     //
     // 调用 First 函数求文法的 First 集合
     //
     SetList FirstSet;
     FirstSet.nSetCount = 0;
-    First(pHead, pVoidTable, &FirstSet);
+    First(pHead, &VoidTable, &FirstSet);
 
     //
     // 输出First集合

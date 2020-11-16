@@ -23,12 +23,11 @@ typedef struct _SetList {
 // 在此处声明函数
 //
 
-void First(const Rule *pHead, Column *pVoidTable, SetList *pFirstSetList);
+void First(const Rule *pHead, VoidTable *pVoidTable, SetList *pFirstSetList);
 Set *GetSet(SetList *pSetList, const char *pName);
 void AddOneSet(SetList *pSetList, const char *pName);
 int AddTerminalToSet(Set *pSet, const char *pTerminal);
 int AddSetToSet(Set *pDesSet, const Set *pSrcSet);
-int SetHasVoid(const Set *pSet);
 
 void PrintFirstSet(SetList *pFirstSetList);
 
