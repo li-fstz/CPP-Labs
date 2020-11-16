@@ -11,7 +11,7 @@
 参数：
     pHead -- 空表的头指针。
 */
-void PrintTable(VoidTable *pVoidTable) {
+void PrintVoidTable(VoidTable *pVoidTable) {
     for (int i = 0; i < pVoidTable->ColCount; i++) {
         printf("%s%c", pVoidTable->pTableHead[i],
                i == pVoidTable->ColCount - 1 ? '\n' : '\t');
@@ -104,7 +104,9 @@ void GenVoidTable(Rule *pRuleHead, VoidTable *pVoidTable) {
                                 hasAllNotVoidSelect = 0;
                             } else {
                                 *pSymblePrePtr = pSymble->pNextSymbol;
-                                pSymble->pNextSymbol->pOther = pSymble->pOther;
+                                if (pSymble->pNextSymbol) {
+                                    pSymble->pNextSymbol->pOther = pSymble->pOther;
+                                }
                                 // FreeSymble(pSymble);
                                 pSymble = *pSymblePrePtr;
                             }

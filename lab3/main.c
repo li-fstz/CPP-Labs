@@ -12,24 +12,25 @@ const char *EndSymbol = "#";
    mulop -> *
    factor -> (exp) | number */
 const RULE_ENTRY rule_table[] = {
-    {"exp", {{{0, "exp"}, {0, "addop"}, {0, "term"}}, {{0, "term"}}}},
-    {"addop", {{{1, "+"}}, {{1, "-"}}}},
-    {"term", {{{0, "term"}, {0, "mulop"}, {0, "factor"}}, {{0, "factor"}}}},
-    {"mulop", {{{1, "*"}}}},
-    {"factor", {{{1, "("}, {0, "exp"}, {1, ")"}}, {{1, "number"}}}}};
+    {"E", {{{0, "T"}, {0, "E'"}}}},
+    {"E'", {{{1, "+"}, {0, "T"}, {0, "E'"}}, {{1, "$"}}}},
+    {"T", {{{0, "F"}, {0, "T'"}}}},
+    {"T'", {{{1, "*"}, {0, "F"}, {0, "T'"}}, {{1, "$"}}}},
+    {"F", {{{1, "i"}}, {{1, "("}, {0, "E"}, {1, ")"}}}}};
 
 int main(int argc, char *argv[]) {
     //
     // 调用 InitRules 函数初始化文法
     //
-    Rule *pHead  = InitRules(rule_table, sizeof(rule_table) / sizeof(RULE_ENTRY));;
+    Rule *pHead =
+        InitRules(rule_table, sizeof(rule_table) / sizeof(RULE_ENTRY));
     PrintRule(pHead);
     //
     // 调用 VoidTable 函数求文法的空表
     //
     VoidTable VoidTable;
     GenVoidTable(pHead, &VoidTable);
-    PrintTable(&VoidTable);
+    PrintVoidTable(&VoidTable);
 
     //
     // 初始化 First 集合、Follow 集合
@@ -37,6 +38,12 @@ int main(int argc, char *argv[]) {
     SetList FirstSetList, FollowSetList;
     FirstSetList.nSetCount = 0;
     FollowSetList.nSetCount = 0;
+
+    //
+    // 调用 First 函数求文法的 First 集合
+    //
+    First(pHead, &VoidTable, &FirstSetList);
+    PrintFirstSet(&FirstSetList);
 
     //
     // 调用 Follow 函数求文法的 First 集合、Follow 集合
@@ -50,5 +57,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
-

@@ -17,6 +17,6 @@ typedef struct _VoidTable {
 
 void GenVoidTable(Rule *pRuleHead, VoidTable *pTable);
 int *FindHasVoid(VoidTable *pTable, const char *RuleName);
-void PrintTable(VoidTable *pTable);
+void PrintVoidTable(VoidTable *pTable);
 char **GetNonTerminals(const Rule *pRule);
 #endif /* VOIDTABLE_H_ */

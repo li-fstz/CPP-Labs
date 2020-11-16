@@ -38,6 +38,6 @@ int main(int argc, char *argv[]) {
     // 输出空表
     //
     printf("\nThe Void Table:\n");
-    PrintTable(&VoidTable);
+    PrintVoidTable(&VoidTable);
     return 0;
 }

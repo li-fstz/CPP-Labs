@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     
     VoidTable VoidTable;
     GenVoidTable(pHead, &VoidTable);
-    PrintTable(&VoidTable);
+    PrintVoidTable(&VoidTable);
 
     //
     // 调用 First 函数求文法的 First 集合
