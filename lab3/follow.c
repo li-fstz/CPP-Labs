@@ -66,45 +66,36 @@ void Follow(const Rule *pHead, VoidTable *pVoidTable, SetList *pFollowSetList,
                     // 初始化一个 First 集合 TempFirstSet，作为临时变量
                     Set TempFirstSet;
                     TempFirstSet.nTerminalCount = 0;
-
-                    if (NULL != pSymbol->pNextSymbol) {
-                        if (pSymbol->pNextSymbol->isToken) {
-                            // 终结符
-
-                            // 调用 AddTerminalToSet 函数将该终结符加入到
-                            // TempFirstSet
-                            AddTerminalToSet(&TempFirstSet,
-                                             pSymbol->pNextSymbol->SymbolName);
-                        } else {
-                            // 非终结符
-                            
-                            // 调用 GetSet 函数在 pFirstSetList 中查找 Set
-                            Set *pFirstSetXn =
-                                GetSet(pFirstSetList,
-                                       pSymbol->pNextSymbol->SymbolName);
-
-                            // 将找到的 Set 加入 TempFirstSet 中
-                            AddSetToSet(&TempFirstSet, pFirstSetXn);
-                            if (*FindHasVoid(pVoidTable, pSymbol->pNextSymbol->SymbolName) && pSymbol->pNextSymbol->pNextSymbol == NULL) {
-                                AddSetToSet(&TempFirstSet, GetSet(pFollowSetList, pRule->RuleName));
+                    RuleSymbol *pTmpSymbol;
+                    for (pTmpSymbol = pSymbol->pNextSymbol; pTmpSymbol != NULL;
+                         pTmpSymbol = pTmpSymbol->pNextSymbol) {
+                        if (pTmpSymbol->isToken) {
+                            if (strcmp(pTmpSymbol, VoidSymbol) != 0) {
+                                AddTerminalToSet(&TempFirstSet,
+                                                 pTmpSymbol->SymbolName);
+                                break;
                             }
-                            RemoveVoidFromSet(&TempFirstSet);
-                        }
-                    } else {
-                        if (AddSetToSet(
-                                GetSet(pFollowSetList, pSymbol->SymbolName),
-                                GetSet(pFollowSetList, pRule->RuleName))) {
-                            isChange = 1;
+                        } else {
+                            AddSetToSet(
+                                &TempFirstSet,
+                                GetSet(pFirstSetList, pTmpSymbol->SymbolName));
+                            if (!*FindHasVoid(pVoidTable,
+                                              pTmpSymbol->SymbolName)) {
+                                break;
+                            }
                         }
                     }
-
-                    // 调用 GetSet 函数在 pFollowSetList 中查找 Set
-                    Set *pFollowSetXi =
-                        GetSet(pFollowSetList, pSymbol->SymbolName);
-
-                    // 将集合 TempFirstSet 加入 pFollowSetXi
-                    if (AddSetToSet(pFollowSetXi, &TempFirstSet))
-                        isChange = 1;  // 设置集合修改标志
+                    RemoveVoidFromSet(&TempFirstSet);
+                    isChange =
+                        AddSetToSet(GetSet(pFollowSetList, pSymbol->SymbolName),
+                                    &TempFirstSet);
+                    if (pTmpSymbol == NULL) {
+                        isChange =
+                            isChange ||
+                            AddSetToSet(
+                                GetSet(pFollowSetList, pSymbol->SymbolName),
+                                GetSet(pFollowSetList, pRule->RuleName));
+                    }
                 }
             }
         }
