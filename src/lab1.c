@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#include "rule.h"
-#include "voidtable.h"
+#include "inc/rule.h"
+#include "inc/voidtable.h"
 
 const char *VoidSymbol = "$";  // "ε"
 

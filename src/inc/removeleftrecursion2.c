@@ -1,4 +1,4 @@
-#include "removeleftrecursion.h"
+#include "removeleftrecursion2.h"
 /*
 功能：
         判断当前 Rule 中的一个 Symbol 是否需要被替换。

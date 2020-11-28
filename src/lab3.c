@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "follow.h"
+#include "inc/follow.h"
 
 const char *VoidSymbol = "$";  // "ε"
 const char *EndSymbol = "#";

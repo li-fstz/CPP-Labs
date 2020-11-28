@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "first.h"
-#include "rule.h"
-#include "voidtable.h"
+#include "inc/first.h"
+#include "inc/rule.h"
+#include "inc/voidtable.h"
 
 const char *VoidSymbol = "$";  // "ε"
 

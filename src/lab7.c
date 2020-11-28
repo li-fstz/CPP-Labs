@@ -1,23 +1,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "removeleftrecursion.h"
+#include "removeleftrecursion2.h"
 
-const char *VoidSymbol = "$";  // "ε"
-const char *Postfix = "'";
-
-/* A -> Aa | bA | c | Ad */
-const RULE_ENTRY rule_table[] = {{"A",
-                                  {{{0, "A"}, {1, "a"}},
-                                   {{1, "b"}, {0, "A"}},
-                                   {{1, "c"}},
-                                   {{0, "A"}, {1, "d"}}}}};
-
-int main(int argc, char *argv[]) {
+const char* VoidSymbol = "$";  // "ε"
+const char* Postfix = "'";
+/* A -> Ba | Aa | c
+   B -> Bb | Ab | d */
+const RULE_ENTRY rule_table[] = {
+    {"A", {{{0, "B"}, {1, "a"}}, {{0, "A"}, {1, "a"}}, {{1, "c"}}}},
+    {"B", {{{0, "B"}, {1, "b"}}, {{0, "A"}, {1, "b"}}, {{1, "d"}}}}};
+int main(int argc, char* argv[]) {
     //
     // 调用 InitRules 函数初始化文法
     //
-    Rule *pHead =
+    Rule* pHead =
         InitRules(rule_table, sizeof(rule_table) / sizeof(RULE_ENTRY));
     ;
 
@@ -28,7 +25,7 @@ int main(int argc, char *argv[]) {
     PrintRule(pHead);
 
     //
-    // 调用 RemoveLeftRecursion 函数对文法消除左递归
+    // 调用 RemoveLeftRecursion 函数消除文法中的左递归
     //
     RemoveLeftRecursion(pHead);
 
@@ -40,3 +37,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
