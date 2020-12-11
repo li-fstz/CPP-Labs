@@ -1,16 +1,19 @@
 #include <stdio.h>
 
-#include "inc/rule.h"
-#include "inc/voidtable.h"
-
-const char *VoidSymbol = "$";  // "ε"
+#include "rule.h"
+#include "voidtable.h"
 
 /* S -> AB | bC
    A -> $ | b
    B -> $ | aD
    C -> AD | b
    D -> aS | c */
-const RULE_ENTRY rule_table[] = {
+
+/**
+ * @brief
+ *
+ */
+const struct RULE_ENTRY rule_table[] = {
     {"S", {{{0, "A"}, {0, "B"}}, {{1, "b"}, {0, "C"}}}},
     {"A", {{{1, "$"}}, {{1, "b"}}}},
     {"B", {{{1, "$"}}, {{1, "a"}, {0, "D"}}}},
@@ -21,19 +24,19 @@ int main(int argc, char *argv[]) {
     //
     // 调用 InitRules 函数初始化文法
     //
-    Rule *pHead =
-        InitRules(rule_table, sizeof(rule_table) / sizeof(RULE_ENTRY));
+    Rule *pRuleHead =
+        InitRules(rule_table, sizeof(rule_table) / sizeof(struct RULE_ENTRY));
 
     //
     // 输出文法
     //
-    PrintRule(pHead);
+    PrintRule(pRuleHead);
 
     //
     // 调用 VoidTable 函数求文法的空表
     //
     VoidTable VoidTable;
-    GenVoidTable(pHead, &VoidTable);
+    GenVoidTable(pRuleHead, &VoidTable);
     //
     // 输出空表
     //

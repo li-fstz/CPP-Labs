@@ -4,14 +4,14 @@
 #include <string.h>
 
 #include "follow.h"
-void Select(Rule *pRule, VoidTable *pVoidTable, SetList *pFirstSetList,
-            SetList *pFollowSetList, SelectSetList *pSelectSetList) {
+void GenSelectSet(Rule *pRule, VoidTable *pVoidTable, SetList *pFirstSetList,
+                  SetList *pFollowSetList, SelectSetList *pSelectSetList) {
     for (; pRule != NULL; pRule = pRule->pNextRule) {
-        for (RuleSymbol *pSelect = pRule->pFirstSymbol; pSelect != NULL;
-             pSelect = pSelect->pOther) {
-            AddOneSelectSet(pSelectSetList, pRule, pSelect);
-            SelectSet *pSelectSet = GetSelectSet(pSelectSetList, pSelect);
-            for (RuleSymbol *pSymbol = pSelect; pSymbol != NULL;
+        for (Production *pProduction = pRule->pFirstProduction;
+             pProduction != NULL; pProduction = pProduction->pNextProduction) {
+            AddOneSelectSet(pSelectSetList, pRule, pProduction);
+            SelectSet *pSelectSet = GetSelectSet(pSelectSetList, pProduction);
+            for (Symbol *pSymbol = pProduction; pSymbol != NULL;
                  pSymbol = pSymbol->pNextSymbol) {
                 if (pSymbol->isToken) {
                     AddTerminalToSelectSet(pSelectSet, pSymbol->SymbolName);
@@ -44,13 +44,13 @@ void GenParsingTable(Rule *pRule, ParsingTable *pParsingTable,
     }
     for (int i = 0; i < pSelectSetList->nSetCount; i++) {
         for (int j = 0; j < pSelectSetList->Sets[i].nTerminalCount; j++) {
-            RuleSymbol **pFindSelect =
-                FindSelect(pParsingTable, pSelectSetList->Sets[i].pRule,
-                           pSelectSetList->Sets[i].Terminal[j]);
-            if (*pFindSelect) {
+            Symbol **pFindProduction =
+                FindProduction(pParsingTable, pSelectSetList->Sets[i].pRule,
+                               pSelectSetList->Sets[i].Terminals[j]);
+            if (*pFindProduction) {
                 puts("该文法不是 LL(1) 文法！");
             } else {
-                *pFindSelect = pSelectSetList->Sets[i].pSelect;
+                *pFindProduction = pSelectSetList->Sets[i].pProduction;
             }
         }
     }
@@ -60,10 +60,10 @@ void PrintSelectSet(SelectSetList *pSelectSetList) {
     printf("\nThe Select Set:\n");
     for (int i = 0; i < pSelectSetList->nSetCount; i++) {
         printf("Select(%s->", pSelectSetList->Sets[i].pRule->RuleName);
-        PrintSelect(pSelectSetList->Sets[i].pSelect);
+        PrintProduction(pSelectSetList->Sets[i].pProduction);
         printf(") = { ");
         for (int j = 0; j < pSelectSetList->Sets[i].nTerminalCount; j++) {
-            printf("%s%s", pSelectSetList->Sets[i].Terminal[j],
+            printf("%s%s", pSelectSetList->Sets[i].Terminals[j],
                    j == pSelectSetList->Sets[i].nTerminalCount - 1 ? " }\n"
                                                                    : ", ");
         }
@@ -79,8 +79,8 @@ void PrintParsingTable(ParsingTable *pParsingTable) {
     for (int i = 0; pParsingTable->TableRows[i].pRule; i++) {
         printf("%s\t", pParsingTable->TableRows[i].pRule->RuleName);
         for (int j = 0; j < pParsingTable->ColCount; j++) {
-            if (pParsingTable->TableRows[i].Select[j]) {
-                PrintSelect(pParsingTable->TableRows[i].Select[j]);
+            if (pParsingTable->TableRows[i].Productions[j]) {
+                PrintProduction(pParsingTable->TableRows[i].Productions[j]);
             }
             putchar(j == pParsingTable->ColCount - 1 ? '\n' : '\t');
         }
@@ -88,11 +88,11 @@ void PrintParsingTable(ParsingTable *pParsingTable) {
 }
 int RemoveVoidFromSelectSet(SelectSet *pSet) {
     for (int i = 0; i < pSet->nTerminalCount; i++) {
-        if (strcmp(pSet->Terminal[i], VoidSymbol) == 0) {
+        if (strcmp(pSet->Terminals[i], VOID_SYMBOL) == 0) {
             if (i != pSet->nTerminalCount - 1) {
-                memmove(
-                    pSet->Terminal + i, pSet->Terminal + i + 1,
-                    sizeof(pSet->Terminal[0]) * (pSet->nTerminalCount - i - 1));
+                memmove(pSet->Terminals + i, pSet->Terminals + i + 1,
+                        sizeof(pSet->Terminals[0]) *
+                            (pSet->nTerminalCount - i - 1));
             }
             pSet->nTerminalCount--;
             return 1;
@@ -100,37 +100,37 @@ int RemoveVoidFromSelectSet(SelectSet *pSet) {
     }
     return 0;
 }
-SelectSet *GetSelectSet(SelectSetList *pSetList, const RuleSymbol *pSelect) {
+SelectSet *GetSelectSet(SelectSetList *pSetList, const Symbol *pProduction) {
     for (int i = 0; i < pSetList->nSetCount; i++) {
-        if (pSetList->Sets[i].pSelect == pSelect) {
+        if (pSetList->Sets[i].pProduction == pProduction) {
             return pSetList->Sets + i;
         }
     }
     return NULL;
 }
 void AddOneSelectSet(SelectSetList *pSetList, const Rule *pRule,
-                     const RuleSymbol *pSelect) {
+                     const Symbol *pProduction) {
     for (int i = 0; i < pSetList->nSetCount; i++) {
-        if (pSetList->Sets[i].pSelect == pSelect) {
+        if (pSetList->Sets[i].pProduction == pProduction) {
             return;
         }
     }
     pSetList->Sets[pSetList->nSetCount].pRule = pRule;
-    pSetList->Sets[pSetList->nSetCount++].pSelect = pSelect;
+    pSetList->Sets[pSetList->nSetCount++].pProduction = pProduction;
 }
 int AddTerminalToSelectSet(SelectSet *pSet, const char *pTerminal) {
     for (int i = 0; i < pSet->nTerminalCount; i++) {
-        if (strcmp(pSet->Terminal[i], pTerminal) == 0) {
+        if (strcmp(pSet->Terminals[i], pTerminal) == 0) {
             return 0;
         }
     }
-    strcpy(pSet->Terminal[pSet->nTerminalCount++], pTerminal);
+    strcpy(pSet->Terminals[pSet->nTerminalCount++], pTerminal);
     return 1;
 }
 int AddSetToSelectSet(SelectSet *pDesSet, const Set *pSrcSet) {
     int flag = 0;
     for (int i = 0; i < pSrcSet->nTerminalCount; i++) {
-        if (AddTerminalToSelectSet(pDesSet, pSrcSet->Terminal[i])) {
+        if (AddTerminalToSelectSet(pDesSet, pSrcSet->Terminals[i])) {
             flag = 1;
         }
     }
@@ -140,9 +140,9 @@ char **GetTerminals(Rule *pRule) {
     char **pTerminals = calloc(32, sizeof(char *));
     int t;
     for (; pRule != NULL; pRule = pRule->pNextRule) {
-        for (RuleSymbol *pSelect = pRule->pFirstSymbol; pSelect != NULL;
-             pSelect = pSelect->pOther) {
-            for (RuleSymbol *pSymbol = pSelect; pSymbol != NULL;
+        for (Production *pProduction = pRule->pFirstProduction;
+             pProduction != NULL; pProduction = pProduction->pNextProduction) {
+            for (Symbol *pSymbol = pProduction; pSymbol != NULL;
                  pSymbol = pSymbol->pNextSymbol) {
                 if (!pSymbol->isToken) {
                     continue;
@@ -159,10 +159,10 @@ char **GetTerminals(Rule *pRule) {
             }
         }
     }
-    pTerminals[t + 1] = EndSymbol;
+    pTerminals[t + 1] = END_SYMBOL;
     return pTerminals;
 }
-RuleSymbol **FindSelect(ParsingTable *pParsingTable, Rule *pRule,
+Symbol **FindProduction(ParsingTable *pParsingTable, Rule *pRule,
                         const char *Terminal) {
     int i;
     for (i = 0; i < pParsingTable->ColCount; i++) {
@@ -172,14 +172,13 @@ RuleSymbol **FindSelect(ParsingTable *pParsingTable, Rule *pRule,
     }
     for (int j = 0; pParsingTable->TableRows[j].pRule; j++) {
         if (pParsingTable->TableRows[j].pRule == pRule) {
-            return pParsingTable->TableRows[j].Select + i;
+            return pParsingTable->TableRows[j].Productions + i;
         }
     }
     return NULL;
 }
-void PrintSelect(RuleSymbol *pSelect) {
-    printf("->");
-    for (; pSelect != NULL; pSelect = pSelect->pNextSymbol) {
-        printf(pSelect->SymbolName);
+void PrintProduction(Symbol *pProduction) {
+    for (; pProduction != NULL; pProduction = pProduction->pNextSymbol) {
+        printf(pProduction->SymbolName);
     }
 }

@@ -1,18 +1,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "inc/first.h"
-#include "inc/rule.h"
-#include "inc/voidtable.h"
-
-const char *VoidSymbol = "$";  // "ε"
+#include "first.h"
+#include "rule.h"
+#include "voidtable.h"
 
 /* exp -> exp addop term| term
    addop -> + | -
    term -> term mulop factor | factor
    mulop -> *
    factor -> (exp) | number */
-const RULE_ENTRY rule_table[] = {
+
+/**
+ * @brief
+ *
+ */
+const struct RULE_ENTRY rule_table[] = {
     {"exp", {{{0, "exp"}, {0, "addop"}, {0, "term"}}, {{0, "term"}}}},
     {"addop", {{{1, "+"}}, {{1, "-"}}}},
     {"term", {{{0, "term"}, {0, "mulop"}, {0, "factor"}}, {{0, "factor"}}}},
@@ -23,33 +26,33 @@ int main(int argc, char *argv[]) {
     //
     // 调用 InitRules 函数初始化文法
     //
-    Rule *pHead =
-        InitRules(rule_table, sizeof(rule_table) / sizeof(RULE_ENTRY));
+    Rule *pRuleHead =
+        InitRules(rule_table, sizeof(rule_table) / sizeof(struct RULE_ENTRY));
 
     //
     // 输出文法
     //
-    PrintRule(pHead);
+    PrintRule(pRuleHead);
 
     //
     // 调用 VoidTable 函数求文法的空表
     //
-    
+
     VoidTable VoidTable;
-    GenVoidTable(pHead, &VoidTable);
+    GenVoidTable(pRuleHead, &VoidTable);
     PrintVoidTable(&VoidTable);
 
     //
     // 调用 First 函数求文法的 First 集合
     //
-    SetList FirstSet;
-    FirstSet.nSetCount = 0;
-    First(pHead, &VoidTable, &FirstSet);
+    SetList FirstSetList;
+    FirstSetList.nSetCount = 0;
+    GenFirstSet(pRuleHead, &VoidTable, &FirstSetList);
 
     //
     // 输出First集合
     //
-    PrintFirstSet(&FirstSet);
+    PrintFirstSet(&FirstSetList);
 
     return 0;
 }

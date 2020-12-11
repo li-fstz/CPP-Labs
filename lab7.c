@@ -3,38 +3,40 @@
 
 #include "removeleftrecursion2.h"
 
-const char* VoidSymbol = "$";  // "ε"
-const char* Postfix = "'";
 /* A -> Ba | Aa | c
    B -> Bb | Ab | d */
-const RULE_ENTRY rule_table[] = {
+
+/**
+ * @brief
+ *
+ */
+const struct RULE_ENTRY rule_table[] = {
     {"A", {{{0, "B"}, {1, "a"}}, {{0, "A"}, {1, "a"}}, {{1, "c"}}}},
     {"B", {{{0, "B"}, {1, "b"}}, {{0, "A"}, {1, "b"}}, {{1, "d"}}}}};
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     //
     // 调用 InitRules 函数初始化文法
     //
-    Rule* pHead =
-        InitRules(rule_table, sizeof(rule_table) / sizeof(RULE_ENTRY));
+    Rule *pRuleHead =
+        InitRules(rule_table, sizeof(rule_table) / sizeof(struct RULE_ENTRY));
     ;
 
     //
     // 输出消除左递归之前的文法
     //
     printf("Before Remove Left Recursion:\n");
-    PrintRule(pHead);
+    PrintRule(pRuleHead);
 
     //
     // 调用 RemoveLeftRecursion 函数消除文法中的左递归
     //
-    RemoveLeftRecursion(pHead);
+    RemoveLeftRecursion(pRuleHead);
 
     //
     // 输出消除左递归之后的文法
     //
     printf("\nAfter Remove Left Recursion:\n");
-    PrintRule(pHead);
+    PrintRule(pRuleHead);
 
     return 0;
 }
-

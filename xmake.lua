@@ -2,6 +2,8 @@ set_symbols("debug")
 
 add_cflags("-fexec-charset=GBK", {force = true})
 
+add_includedirs("inc")
+
 local libs = {
     "rule", 
     "voidtable", 
@@ -17,7 +19,7 @@ local libs = {
 for _, lib in pairs(libs) do 
     target(lib)
         set_kind("static")
-        add_files("src/inc/" .. lib .. ".c")
+        add_files("src/" .. lib .. ".c")
 end
 
 local labs = {
@@ -35,11 +37,10 @@ for lab, include in pairs(labs) do
     target(lab)
         set_kind("binary")
         set_targetdir("build")
-        add_includedirs("src/inc")
-        add_files("src/" .. lab .. ".c")
+        add_files(lab .. ".c")
         for _, lib in pairs(include) do
             add_deps(lib)
         end
 end
 
--- xmake f  --toolchain=gcc --cc=D:\MinGW\bin\gcc.exe
+-- xmake f --toolchain=gcc --cc=D:\MinGW\bin\gcc.exe

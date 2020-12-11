@@ -9,8 +9,13 @@
     输出空表。
 
 参数：
-    pHead -- 空表的头指针。
-*/
+    pRuleHead -- 空表的头指针。
+
+/**
+ * @brief
+ *
+ * @param pVoidTable
+ */
 void PrintVoidTable(VoidTable *pVoidTable) {
     for (int i = 0; i < pVoidTable->ColCount; i++) {
         printf("%s%c", pVoidTable->pTableHead[i],
@@ -29,7 +34,13 @@ void PrintVoidTable(VoidTable *pVoidTable) {
 参数：
     pRuleHead -- 文法的头指针。
     pVoidTable -- 空表的头指针。
-*/
+
+/**
+ * @brief
+ *
+ * @param pRuleHead
+ * @param pVoidTable
+ */
 void GenVoidTable(Rule *pRuleHead, VoidTable *pVoidTable) {
     pVoidTable->pTableHead = GetNonTerminals(pRuleHead);
     for (pVoidTable->ColCount = 0; pVoidTable->pTableHead[pVoidTable->ColCount];
@@ -39,40 +50,39 @@ void GenVoidTable(Rule *pRuleHead, VoidTable *pVoidTable) {
     Rule *pCopiedRule = CopyRule(pRuleHead);
     Rule *pRule = pCopiedRule, **pRulePrePtr = &pCopiedRule;
     while (pRule != NULL) {
-        RuleSymbol *pSelect = pRule->pFirstSymbol,
-                   **pSelectPrePtr = &pRule->pFirstSymbol;
-        int hasVoidSelect = 0;
-        while (pSelect != NULL) {
-            if (pSelect->pNextSymbol == NULL &&
-                strcmp(pSelect->SymbolName, VoidSymbol) == 0) {
-                hasVoidSelect = 1;
+        Production *pProduction = pRule->pFirstProduction,
+                   **pProductionPrePtr = &pRule->pFirstProduction;
+        int hasVoidProduction = 0;
+        while (pProduction != NULL) {
+            if (pProduction->pNextSymbol == NULL &&
+                strcmp(pProduction->SymbolName, VOID_SYMBOL) == 0) {
+                hasVoidProduction = 1;
                 break;
             }
-
-            int deleteThisSelect = 0;
-            for (RuleSymbol *pSymble = pSelect; pSymble != NULL;
+            int deleteThisProduction = 0;
+            for (Symbol *pSymble = pProduction; pSymble != NULL;
                  pSymble = pSymble->pNextSymbol) {
                 if (pSymble->isToken &&
-                    strcmp(pSymble->SymbolName, VoidSymbol) != 0) {
-                    deleteThisSelect = 1;
+                    strcmp(pSymble->SymbolName, VOID_SYMBOL) != 0) {
+                    deleteThisProduction = 1;
                     break;
                 }
             }
-            if (deleteThisSelect) {
-                *pSelectPrePtr = pSelect->pOther;
-                // FreeSelect(pSelect);
-                pSelect = *pSelectPrePtr;
+            if (deleteThisProduction) {
+                *pProductionPrePtr = pProduction->pNextProduction;
+                // FreeProduction(pProduction);
+                pProduction = *pProductionPrePtr;
             } else {
-                pSelectPrePtr = &pSelect->pOther;
-                pSelect = pSelect->pOther;
+                pProductionPrePtr = &pProduction->pNextProduction;
+                pProduction = pProduction->pNextProduction;
             }
         }
-        if (hasVoidSelect) {
+        if (hasVoidProduction) {
             *FindHasVoid(pVoidTable, pRule->RuleName) = 1;
             *pRulePrePtr = pRule->pNextRule;
             // FreeRule(pRule);
             pRule = *pRulePrePtr;
-        } else if (pRule->pFirstSymbol == NULL) {
+        } else if (pRule->pFirstProduction == NULL) {
             *FindHasVoid(pVoidTable, pRule->RuleName) = 0;
             *pRulePrePtr = pRule->pNextRule;
             // FreeRule(pRule);
@@ -82,53 +92,54 @@ void GenVoidTable(Rule *pRuleHead, VoidTable *pVoidTable) {
             pRule = pRule->pNextRule;
         }
     }
-
     int isChange = 0;
     do {
         isChange = 0;
         Rule *pRule = pCopiedRule, **pRulePrePtr = &pCopiedRule;
         while (pRule != NULL) {
-            int hasAllNotVoidSelect, hasVoidSelect;
-            for (RuleSymbol *pSelect = pRule->pFirstSymbol; pSelect != NULL;
-                 pSelect = pSelect->pOther) {
-                RuleSymbol *pSymble = pSelect,
-                           **pSymblePrePtr = &pRule->pFirstSymbol;
-                hasAllNotVoidSelect = 1;
-                hasVoidSelect = 0;
+            int hasAllNotVoidProduction, hasVoidProduction;
+            for (Production *pProduction = pRule->pFirstProduction;
+                 pProduction != NULL;
+                 pProduction = pProduction->pNextProduction) {
+                Symbol *pSymble = pProduction,
+                       **pSymblePrePtr = &pRule->pFirstProduction;
+                hasAllNotVoidProduction = 1;
+                hasVoidProduction = 0;
                 while (pSymble != NULL) {
                     switch (*FindHasVoid(pVoidTable, pSymble->SymbolName)) {
-                        case 1:
-                            if (pSymble->pNextSymbol == NULL &&
-                                pSymblePrePtr == &pRule->pFirstSymbol) {
-                                hasVoidSelect = 1;
-                                hasAllNotVoidSelect = 0;
-                            } else {
-                                *pSymblePrePtr = pSymble->pNextSymbol;
-                                if (pSymble->pNextSymbol) {
-                                    pSymble->pNextSymbol->pOther = pSymble->pOther;
-                                }
-                                // FreeSymble(pSymble);
-                                pSymble = *pSymblePrePtr;
+                    case 1:
+                        if (pSymble->pNextSymbol == NULL &&
+                            pSymblePrePtr == &pRule->pFirstProduction) {
+                            hasVoidProduction = 1;
+                            hasAllNotVoidProduction = 0;
+                        } else {
+                            *pSymblePrePtr = pSymble->pNextSymbol;
+                            if (pSymble->pNextSymbol) {
+                                pSymble->pNextSymbol->pNextProduction =
+                                    pSymble->pNextProduction;
                             }
-                            break;
-                        case -1:
-                            hasAllNotVoidSelect = 0;
-                        case 0:
-                            pSymblePrePtr = &pSymble->pNextSymbol;
-                            pSymble = pSymble->pNextSymbol;
-                            break;
+                            // FreeSymble(pSymble);
+                            pSymble = *pSymblePrePtr;
+                        }
+                        break;
+                    case -1:
+                        hasAllNotVoidProduction = 0;
+                    case 0:
+                        pSymblePrePtr = &pSymble->pNextSymbol;
+                        pSymble = pSymble->pNextSymbol;
+                        break;
                     }
-                    if (hasVoidSelect) {
+                    if (hasVoidProduction) {
                         break;
                     }
                 }
-                if (hasAllNotVoidSelect || hasVoidSelect) {
+                if (hasAllNotVoidProduction || hasVoidProduction) {
                     break;
                 }
             }
-            if (hasAllNotVoidSelect || hasVoidSelect) {
+            if (hasAllNotVoidProduction || hasVoidProduction) {
                 isChange = 1;
-                *FindHasVoid(pVoidTable, pRule->RuleName) = hasVoidSelect;
+                *FindHasVoid(pVoidTable, pRule->RuleName) = hasVoidProduction;
                 *pRulePrePtr = pRule->pNextRule;
                 // FreeRule(pRule);
                 pRule = *pRulePrePtr;
@@ -150,7 +161,14 @@ void GenVoidTable(Rule *pRuleHead, VoidTable *pVoidTable) {
 
 返回值：
     如果存在名字相同的列返回 Column 指针，否则返回 NULL
-*/
+
+/**
+ * @brief
+ *
+ * @param pTable
+ * @param RuleName
+ * @return int*
+ */
 int *FindHasVoid(VoidTable *pTable, const char *RuleName) {
     for (int i = 0; i < pTable->ColCount; i++) {
         if (strcmp(pTable->pTableHead[i], RuleName) == 0) {

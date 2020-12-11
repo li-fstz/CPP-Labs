@@ -4,21 +4,21 @@
 #include <string.h>
 
 #include "follow.h"
-void PushSymbol(ParsingStack *pStack, RuleSymbol *pSymbol) {
-    pStack->Symbol[pStack->nSymbolCount++] = pSymbol;
+void PushSymbol(ParsingStack *pStack, Symbol *pSymbol) {
+    pStack->Symbols[pStack->nSymbolCount++] = pSymbol;
 }
-void PushSelect(ParsingStack *pStack, RuleSymbol *pSelect) {
-    if (pSelect == NULL) {
+void PushProduction(ParsingStack *pStack, Production *pProduction) {
+    if (pProduction == NULL) {
         return;
     }
-    PushSelect(pStack, pSelect->pNextSymbol);
-    if (strcmp(pSelect->SymbolName, VoidSymbol)) {
-        PushSymbol(pStack, pSelect);
+    PushProduction(pStack, pProduction->pNextSymbol);
+    if (strcmp(pProduction->SymbolName, VOID_SYMBOL)) {
+        PushSymbol(pStack, pProduction);
     }
 }
-RuleSymbol *PopSymbol(ParsingStack *pStack) {
+Symbol *PopSymbol(ParsingStack *pStack) {
     if (pStack->nSymbolCount) {
-        return pStack->Symbol[--pStack->nSymbolCount];
+        return pStack->Symbols[--pStack->nSymbolCount];
     } else {
         return NULL;
     }
@@ -26,16 +26,16 @@ RuleSymbol *PopSymbol(ParsingStack *pStack) {
 
 void PrintParsingStack(ParsingStack *pStack) {
     for (int i = 0; i < pStack->nSymbolCount; i++) {
-        printf(pStack->Symbol[i]->SymbolName);
+        printf(pStack->Symbols[i]->SymbolName);
     }
 }
 
 void Parse(Rule *pRule, ParsingTable *pParsingTable, const char *string) {
     ParsingStack Stack;
     Stack.nSymbolCount = 0;
-    RuleSymbol *End = CreateSymbol(), *Start = CreateSymbol();
+    Symbol *End = CreateSymbol(), *Start = CreateSymbol();
     End->isToken = 1;
-    strcpy(End->SymbolName, EndSymbol);
+    strcpy(End->SymbolName, END_SYMBOL);
     PushSymbol(&Stack, End);
     Start->isToken = 0;
     strcpy(Start->SymbolName, pRule->RuleName);
@@ -46,7 +46,7 @@ void Parse(Rule *pRule, ParsingTable *pParsingTable, const char *string) {
         printf("%d\t", ++i);
         PrintParsingStack(&Stack);
         printf("\t%s\t", string);
-        RuleSymbol *pTopSymbol = PopSymbol(&Stack);
+        Symbol *pTopSymbol = PopSymbol(&Stack);
         if (pTopSymbol->isToken) {
             if (Stack.nSymbolCount) {
                 if (*pTopSymbol->SymbolName == *string) {
@@ -57,7 +57,7 @@ void Parse(Rule *pRule, ParsingTable *pParsingTable, const char *string) {
                 }
                 string++;
             } else {
-                if (strcmp(string, EndSymbol) == 0) {
+                if (strcmp(string, END_SYMBOL) == 0) {
                     printf("接受");
                 } else {
                     printf("不接受");
@@ -65,11 +65,11 @@ void Parse(Rule *pRule, ParsingTable *pParsingTable, const char *string) {
             }
         } else {
             char ch[] = {*string, '\0'};
-            RuleSymbol **pSelect =
-                FindSelect(pParsingTable, pTopSymbol->pRule, ch);
-            printf("%s", pTopSymbol->SymbolName);
-            PrintSelect(*pSelect);
-            PushSelect(&Stack, *pSelect);
+            Symbol **pProduction =
+                FindProduction(pParsingTable, pTopSymbol->pRule, ch);
+            printf("%s->", pTopSymbol->SymbolName);
+            PrintProduction(*pProduction);
+            PushProduction(&Stack, *pProduction);
         }
         putchar('\n');
     }
