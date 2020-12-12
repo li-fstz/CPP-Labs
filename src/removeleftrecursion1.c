@@ -1,18 +1,10 @@
 #include "removeleftrecursion1.h"
 
-/*
-功能：
-        将一个 Symbol 添加到 Production 的末尾。
-
-参数：
-        pProduction -- Production 指针。
-        pNewSymbol -- Symbol 指针。
-
 /**
- * @brief
+ * @brief 将一个符号添加到产生式末尾
  *
- * @param pProduction
- * @param pNewSymbol
+ * @param pProduction 产生式的指针
+ * @param pNewSymbol 符号的指针
  */
 void AddSymbolToProduction(Production *pProduction, Symbol *pNewSymbol) {
     while (pProduction->pNextSymbol) {
@@ -21,29 +13,20 @@ void AddSymbolToProduction(Production *pProduction, Symbol *pNewSymbol) {
     pProduction->pNextSymbol = pNewSymbol;
 }
 
-/*
-功能：
-        将一个 Production 加入到文法末尾。当 Production 为 NULL
-时就将一个ε终结符加入到文法末尾。
-
-参数：
-        pRule -- 文法指针。
-        pNewProduction -- Production 指针。
-
 /**
- * @brief
+ * @brief 将产生式加入到文法中的产生式链表中
  *
- * @param pRule
- * @param pNewProduction
+ * @param pRule 文法的指针
+ * @param pNewProduction 产生式的指针
  */
-void AddProductionToRule(Rule *pRule, Symbol *pNewProduction) {
+void AddProductionToRule(Rule *pRule, Production *pNewProduction) {
     if (!pNewProduction) {
         pNewProduction = CreateSymbol();
         pNewProduction->isToken = 1;
         strcpy(pNewProduction->SymbolName, VOID_SYMBOL);
     }
     if (pRule->pFirstProduction) {
-        Symbol *pTmp = pRule->pFirstProduction;
+        Production *pTmp = pRule->pFirstProduction;
         while (pTmp->pNextProduction) {
             pTmp = pTmp->pNextProduction;
         }
@@ -53,17 +36,10 @@ void AddProductionToRule(Rule *pRule, Symbol *pNewProduction) {
     }
 }
 
-/*
-功能：
-        消除左递归。
-
-参数：
-        pRuleHead -- 文法链表的头指针。
-
 /**
- * @brief
+ * @brief 消除左递归
  *
- * @param pRuleHead
+ * @param pRuleHead 文法链表的头指针
  */
 void RemoveLeftRecursion(Rule *pRuleHead) {
     Production *pProduction;                    // Production 游标
@@ -71,7 +47,7 @@ void RemoveLeftRecursion(Rule *pRuleHead) {
     pNewRule = CreateRule(pRuleHead->RuleName); // 创建新 Rule
     strcat(pNewRule->RuleName, POSTFIX);
     pProduction = pRuleHead->pFirstProduction; // 初始化 Production 游标
-    Symbol **pProductionPrePtr = &pRuleHead->pFirstProduction;
+    Production **pProductionPrePtr = &pRuleHead->pFirstProduction;
     while (pProduction != NULL) // 循环处理所有的 Production
     {
         Symbol *pTmp = CreateSymbol();

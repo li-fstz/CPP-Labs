@@ -28,13 +28,13 @@ void RemoveVoidFromSet(Set *pSet) {
 /**
  * @brief 生成文法的 Follow 集
  *
- * @param pRuleHead 文法的头指针
+ * @param pRuleHead 文法链表的头指针
  * @param pVoidTable 空表的指针
- * @param pFollowSetList First 集的指针
  * @param pFirstSetList Follow 集的指针
+ * @param pFollowSetList First 集的指针
  */
-void GenFollowSet(const Rule *pRuleHead, VoidTable *pVoidTable,
-                  SetList *pFollowSetList, SetList *pFirstSetList) {
+void GenFollowSetList(const Rule *pRuleHead, VoidTable *pVoidTable,
+                  SetList *pFirstSetList, SetList *pFollowSetList) {
     const Rule *pRule; // Rule 指针
     int isChange;      // 集合是否被修改的标志
     Symbol *pSymbol;   // Symbol 游标
@@ -99,7 +99,7 @@ void GenFollowSet(const Rule *pRuleHead, VoidTable *pVoidTable,
  *
  * @param pFollowSetList Follow 集指针
  */
-void PrintFollowSet(SetList *pFollowSetList) {
+void PrintFollowSetList(SetList *pFollowSetList) {
     printf("\nThe Follow Set:\n");
     for (int i = 0; i < pFollowSetList->nSetCount; i++) {
         printf("Follow(%s) = { ", pFollowSetList->Sets[i].Name);

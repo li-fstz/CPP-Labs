@@ -1,24 +1,13 @@
 #include "removeleftrecursion2.h"
-/*
-功能：
-        判断当前 Rule 中的一个 Symbol 是否需要被替换。
-        如果 Symbol 是一个非终结符，且 Symbol 对应的
-        Rule 在当前 Rule 之前，就需要被替换。
-
-参数：
-        pCurRule -- 当前 Rule 的指针。
-        pSymbol -- Symbol 指针。
-
-返回值：
-        需要替换返回 1。
-        不需要替换返回 0。
 
 /**
- * @brief
+ * @brief 判断当前文法中的符号是否需要被替换，
+ *        如果这个符号是非终结符且指向的文法在当前文法之前，
+ *        那么该终结符应该被替换
  *
- * @param pCurRule
- * @param pSymbol
- * @return int
+ * @param pCurRule 文法的指针
+ * @param pSymbol 符号的指针
+ * @return int 是否需要被替换
  */
 int SymbolNeedReplace(const Rule *pCurRule, const Symbol *pSymbol) {
     if (pSymbol->isToken) {
@@ -36,25 +25,15 @@ int SymbolNeedReplace(const Rule *pCurRule, const Symbol *pSymbol) {
     }
 }
 
-/*
-功能：
-        替换一个 Production 的第一个 Symbol。
-
-参数：
-        pProductionTemplate -- 需要被替换的 Production 指针。
-
-返回值：
-        替换后获得的新 Production 的指针。
-        注意，替换后可能会有一个新的 Production，
-        也可能会有多个 Production 链接在一起。
-
 /**
- * @brief
+ * @brief 替换产生式的第一个符号
  *
- * @param pProductionTemplate
- * @return Symbol*
+ * @param pProductionTemplate 需要被替换的产生式的指针
+ * @return Symbol* 替换后的新产生式的指针，
+ *                 注意第一个符号指向的产生式可能是一个链表，
+ *                 所以返回的新产生是也可能是一个链表 
  */
-Symbol *ReplaceProduction(const Production *pProductionTemplate) {
+Production *ReplaceProduction(const Production *pProductionTemplate) {
     Production *pProductionsOfFirstSymble =
                    CopyProduction(pProductionTemplate->pRule->pFirstProduction),
                *pTmpProduction = pProductionsOfFirstSymble;
@@ -74,17 +53,10 @@ Symbol *ReplaceProduction(const Production *pProductionTemplate) {
     return pProductionsOfFirstSymble;
 }
 
-/*
-功能：
-        释放一个 Production 的内存。
-
-参数：
-        pProduction -- 需要释放的 Production 的指针。
-
 /**
- * @brief
+ * @brief 释放一个产生式链表的内存
  *
- * @param pProduction
+ * @param pProduction 产生式链表的头指针
  */
 void FreeProduction(Production *pProduction) {
     if (pProduction->pNextSymbol) {
@@ -94,23 +66,12 @@ void FreeProduction(Production *pProduction) {
     }
 }
 
-/*
-功能：
-        判断一条 Rule 是否存在左递归。
-
-参数：
-        prRule -- Rule 指针。
-
-返回值：
-        存在返回 1。
-        不存在返回 0。
-
 /**
- * @brief
+ * @brief 判断该产生式是否存在左递归
  *
- * @param pProduction
- * @param pRule
- * @return int
+ * @param pProduction 产生式的指针
+ * @param pRule 指向该产生式的文法的指针
+ * @return int 是否存在左递归
  */
 int ProductionHasLeftRecursion(Production *pProduction, Rule *pRule) {
     if (pProduction->isToken) {
@@ -119,8 +80,15 @@ int ProductionHasLeftRecursion(Production *pProduction, Rule *pRule) {
         return pProduction->pRule == pRule;
     }
 }
+
+/**
+ * @brief 判断该文法是否存在左递归
+ * 
+ * @param pRule 文法的指针
+ * @return int  是否存在左递归
+ */
 int RuleHasLeftRecursion(Rule *pRule) {
-    Symbol *pTmp = pRule->pFirstProduction;
+    Production *pTmp = pRule->pFirstProduction;
     while (pTmp) {
         if (ProductionHasLeftRecursion(pTmp, pRule)) {
             return 1;
@@ -130,19 +98,11 @@ int RuleHasLeftRecursion(Rule *pRule) {
     return 0;
 }
 
-/*
-功能：
-        将一个 Symbol 添加到 Production 的末尾。
-
-参数：
-        pProduction -- Production 指针。
-        pNewSymbol -- Symbol 指针。
-
 /**
- * @brief
+ * @brief 将一个符号添加到产生式尾部
  *
- * @param pProduction
- * @param pNewSymbol
+ * @param pProduction 产生式的指针
+ * @param pNewSymbol 符号的指针
  */
 void AddSymbolToProduction(Production *pProduction, Symbol *pNewSymbol) {
     while (pProduction->pNextSymbol) {
@@ -151,29 +111,21 @@ void AddSymbolToProduction(Production *pProduction, Symbol *pNewSymbol) {
     pProduction->pNextSymbol = pNewSymbol;
 }
 
-/*
-功能：
-        将一个 Production 加入到文法末尾，当 Production 为 NULL
-时就将一个ε终结符加入到文法末尾。
-
-参数：
-        pRule -- 文法指针。
-        pNewProduction -- Production 指针。
-
 /**
- * @brief
+ * @brief 讲一个产生式添加到文法指向的产生式链表尾部，
+ *        当产生式指针为 NULL 时则添加 ε
  *
- * @param pRule
- * @param pNewProduction
+ * @param pRule 文法的指针
+ * @param pNewProduction 产生式的指针
  */
-void AddProductionToRule(Rule *pRule, Symbol *pNewProduction) {
+void AddProductionToRule(Rule *pRule, Production *pNewProduction) {
     if (!pNewProduction) {
         pNewProduction = CreateSymbol();
         pNewProduction->isToken = 1;
         strcpy(pNewProduction->SymbolName, VOID_SYMBOL);
     }
     if (pRule->pFirstProduction) {
-        Symbol *pTmp = pRule->pFirstProduction;
+        Production *pTmp = pRule->pFirstProduction;
         while (pTmp->pNextProduction) {
             pTmp = pTmp->pNextProduction;
         }
@@ -183,24 +135,17 @@ void AddProductionToRule(Rule *pRule, Symbol *pNewProduction) {
     }
 }
 
-/*
-功能：
-        消除左递归。
-
-参数：
-        pRuleHead -- 文法链表的头指针。
-
 /**
- * @brief
+ * @brief 消除左递归
  *
- * @param pRuleHead
+ * @param pRuleHead 文法链表的头指针
  */
 void RemoveLeftRecursion(Rule *pRuleHead) {
     Rule *pRule;                // Rule 游标
     Production *pProduction;    // Production 游标
     Rule *pNewRule;             // Rule 指针
     int isChange;               // Rule 是否被替换的标记
-    Symbol **pProductionPrePtr; // Symbol 指针的指针
+    Production **pProductionPrePtr; // Symbol 指针的指针
 
     for (pRule = pRuleHead; pRule != NULL; pRule = pRule->pNextRule) {
         //
@@ -221,7 +166,7 @@ void RemoveLeftRecursion(Rule *pRuleHead) {
                     isChange = 1;
                     // 调用 ReplaceProduction 函数，替换 Production 的第一个
                     // Symbol 后得到新的 Productions
-                    Symbol *pNewProductions = ReplaceProduction(pProduction);
+                    Production *pNewProductions = ReplaceProduction(pProduction);
                     // 使用新的 Productions 替换原有的 Production，并调用
                     // FreeProduction 函数释放原有的 Production 内存
                     *pProductionPrePtr = pNewProductions;

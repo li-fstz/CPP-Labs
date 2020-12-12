@@ -5,8 +5,7 @@
 #define VOID_SYMBOL "$"
 
 typedef struct Rule Rule;
-typedef struct Symbol Symbol;
-typedef struct Symbol Production;
+typedef struct Symbol Symbol, Production;
 
 struct Symbol {
     Symbol *pNextSymbol;         // 指向下一个 Symbol
@@ -15,6 +14,7 @@ struct Symbol {
     char SymbolName[MAX_STR_LENGTH]; // 终结符和非终结符的名称
     Rule *pRule; // 指向 Symbol 对应的 Rule。isToken 为 0 时这个域有效
 };
+
 struct Rule {
     char RuleName[MAX_STR_LENGTH]; // 文法的名称
     Production *pFirstProduction; // 指向文法的第一个 Production 的第一个 Symbol
@@ -37,7 +37,7 @@ Symbol *CreateSymbol();
 Rule *FindRule(Rule *pRuleHead, const char *RuleName);
 void PrintRule(Rule *pRuleHead);
 Symbol *CopySymbol(const Symbol *pSymbolTemplate);
-Symbol *CopyProduction(const Production *pProductionTemplate);
+Production *CopyProduction(const Production *pProductionTemplate);
 Rule *CopyRule(Rule *pRuleHead);
 
 #endif /* RULE_H_ */

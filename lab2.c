@@ -5,15 +5,13 @@
 #include "rule.h"
 #include "voidtable.h"
 
-/* exp -> exp addop term| term
-   addop -> + | -
-   term -> term mulop factor | factor
-   mulop -> *
-   factor -> (exp) | number */
-
 /**
  * @brief
- *
+ * exp -> exp addop term| term
+ * addop -> + | -
+ * term -> term mulop factor | factor
+ * mulop -> *
+ * factor -> (exp) | number
  */
 const struct RULE_ENTRY rule_table[] = {
     {"exp", {{{0, "exp"}, {0, "addop"}, {0, "term"}}, {{0, "term"}}}},
@@ -47,12 +45,12 @@ int main(int argc, char *argv[]) {
     //
     SetList FirstSetList;
     FirstSetList.nSetCount = 0;
-    GenFirstSet(pRuleHead, &VoidTable, &FirstSetList);
+    GenFirstSetList(pRuleHead, &VoidTable, &FirstSetList);
 
     //
     // 输出First集合
     //
-    PrintFirstSet(&FirstSetList);
+    PrintFirstSetList(&FirstSetList);
 
     return 0;
 }

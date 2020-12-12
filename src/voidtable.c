@@ -4,17 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*
-功能：
-    输出空表。
-
-参数：
-    pRuleHead -- 空表的头指针。
-
 /**
- * @brief
+ * @brief 输出空表
  *
- * @param pVoidTable
+ * @param pVoidTable 空表的指针
  */
 void PrintVoidTable(VoidTable *pVoidTable) {
     for (int i = 0; i < pVoidTable->ColCount; i++) {
@@ -27,19 +20,11 @@ void PrintVoidTable(VoidTable *pVoidTable) {
     }
 }
 
-/*
-功能：
-    求出文法的空表。
-
-参数：
-    pRuleHead -- 文法的头指针。
-    pVoidTable -- 空表的头指针。
-
 /**
- * @brief
+ * @brief 生成文法的空表
  *
- * @param pRuleHead
- * @param pVoidTable
+ * @param pRuleHead 文法链表的头指针
+ * @param pVoidTable 空表的指针
  */
 void GenVoidTable(Rule *pRuleHead, VoidTable *pVoidTable) {
     pVoidTable->pTableHead = GetNonTerminals(pRuleHead);
@@ -151,23 +136,12 @@ void GenVoidTable(Rule *pRuleHead, VoidTable *pVoidTable) {
     } while (isChange);
 }
 
-/*
-功能：
-    根据 RuleName 在空表链表中查找名字相同的列。
-
-参数：
-    pVoidTable -- 空表链表的头指针。
-    RuleName -- 文法的名字。
-
-返回值：
-    如果存在名字相同的列返回 Column 指针，否则返回 NULL
-
 /**
- * @brief
+ * @brief 在空表中根据文法名字找到值的位置
  *
- * @param pTable
- * @param RuleName
- * @return int*
+ * @param pTable 空表的指针
+ * @param RuleName 文法的名字
+ * @return int* 值在空表中的位置
  */
 int *FindHasVoid(VoidTable *pTable, const char *RuleName) {
     for (int i = 0; i < pTable->ColCount; i++) {
@@ -178,11 +152,17 @@ int *FindHasVoid(VoidTable *pTable, const char *RuleName) {
     return 0;
 }
 
-char **GetNonTerminals(const Rule *pRule) {
+/**
+ * @brief 从文法中提取所有的非终结符
+ * 
+ * @param pRule 文法链表的头指针
+ * @return char** 非终结符数组
+ */
+char **GetNonTerminals(const Rule *pRuleHead) {
     char **pNonTerminals = calloc(32, sizeof(char *));
-    for (int i = 0; pRule != NULL; pRule = pRule->pNextRule, i++) {
+    for (int i = 0; pRuleHead != NULL; pRuleHead = pRuleHead->pNextRule, i++) {
         pNonTerminals[i] = malloc(MAX_STR_LENGTH);
-        strcpy(pNonTerminals[i], pRule->RuleName);
+        strcpy(pNonTerminals[i], pRuleHead->RuleName);
     }
     return pNonTerminals;
 }

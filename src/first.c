@@ -12,7 +12,7 @@
  *
  * @param pFirstSetList First 集指针
  */
-void PrintFirstSet(SetList *pFirstSetList) {
+void PrintFirstSetList(SetList *pFirstSetList) {
     printf("\nThe First Set:\n");
     for (int i = 0; i < pFirstSetList->nSetCount; i++) {
         printf("First(%s) = { ", pFirstSetList->Sets[i].Name);
@@ -30,16 +30,17 @@ void PrintFirstSet(SetList *pFirstSetList) {
 /**
  * @brief 生成文法的 First 集
  *
- * @param pRuleHead 文法的头指针
+ * @param pRuleHead 文法链表的头指针
  * @param pVoidTable 空表的指针
  * @param pFirstSetList First 集的指针
  */
-void GenFirstSet(const Rule *pRuleHead, VoidTable *pVoidTable,
-                 SetList *pFirstSetList) {
+void GenFirstSetList(const Rule *pRuleHead, VoidTable *pVoidTable,
+                     SetList *pFirstSetList) {
     const Rule *pRule; // Rule 指针
-    int isChange;      // 集合是否被修改的标志
+    int isChange;      // First 集是否被修改的标志
     Symbol *pSymbol;   // Symbol 游标
-    // 使用文法链表初始化 First 集合
+
+    //初始化 First 集
     for (pRule = pRuleHead; pRule != NULL; pRule = pRule->pNextRule) {
         AddOneSet(pFirstSetList, pRule->RuleName);
         if (*FindHasVoid(pVoidTable, pRule->RuleName)) {
@@ -133,7 +134,7 @@ int AddTerminalToSet(Set *pSet, const char *Terminal) {
 }
 
 /**
- * @brief 将源子集中的终结符添加至目标子集中
+ * @brief 将源子集中的所有终结符添加至目标子集中
  *
  * @param pDesSet 目标子集指针
  * @param pSrcSet 源子集指针

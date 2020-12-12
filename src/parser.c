@@ -4,9 +4,23 @@
 #include <string.h>
 
 #include "follow.h"
+
+/**
+ * @brief 将符号压入栈中
+ * 
+ * @param pStack 栈指针
+ * @param pSymbol 符号指针
+ */
 void PushSymbol(ParsingStack *pStack, Symbol *pSymbol) {
     pStack->Symbols[pStack->nSymbolCount++] = pSymbol;
 }
+
+/**
+ * @brief 将产生式逆向压入栈中
+ * 
+ * @param pStack 栈指针
+ * @param pProduction 产生式指针
+ */
 void PushProduction(ParsingStack *pStack, Production *pProduction) {
     if (pProduction == NULL) {
         return;
@@ -24,13 +38,25 @@ Symbol *PopSymbol(ParsingStack *pStack) {
     }
 }
 
+/**
+ * @brief 输出栈
+ * 
+ * @param pStack 栈指针
+ */
 void PrintParsingStack(ParsingStack *pStack) {
     for (int i = 0; i < pStack->nSymbolCount; i++) {
         printf(pStack->Symbols[i]->SymbolName);
     }
 }
 
-void Parse(Rule *pRule, ParsingTable *pParsingTable, const char *string) {
+/**
+ * @brief 执行自顶向下语法分析
+ * 
+ * @param pRuleHead 文法链表的头指针
+ * @param pParsingTable 预测分析表的指针
+ * @param string 待解析文本
+ */
+void Parse(Rule *pRuleHead, ParsingTable *pParsingTable, const char *string) {
     ParsingStack Stack;
     Stack.nSymbolCount = 0;
     Symbol *End = CreateSymbol(), *Start = CreateSymbol();
@@ -38,8 +64,8 @@ void Parse(Rule *pRule, ParsingTable *pParsingTable, const char *string) {
     strcpy(End->SymbolName, END_SYMBOL);
     PushSymbol(&Stack, End);
     Start->isToken = 0;
-    strcpy(Start->SymbolName, pRule->RuleName);
-    Start->pRule = pRule;
+    strcpy(Start->SymbolName, pRuleHead->RuleName);
+    Start->pRule = pRuleHead;
     PushSymbol(&Stack, Start);
     int i = 0;
     while (Stack.nSymbolCount) {
@@ -65,7 +91,7 @@ void Parse(Rule *pRule, ParsingTable *pParsingTable, const char *string) {
             }
         } else {
             char ch[] = {*string, '\0'};
-            Symbol **pProduction =
+            Production **pProduction =
                 FindProduction(pParsingTable, pTopSymbol->pRule, ch);
             printf("%s->", pTopSymbol->SymbolName);
             PrintProduction(*pProduction);

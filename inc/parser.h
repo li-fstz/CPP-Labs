@@ -10,6 +10,6 @@ typedef struct {
 void PushSymbol(ParsingStack *pStack, Symbol *pSymbol);
 void PushProduction(ParsingStack *pStack, Production *pProduction);
 Symbol *PopSymbol(ParsingStack *pStack);
-void Parse(Rule *pRule, ParsingTable *pParsingTable, const char *string);
+void Parse(Rule *pRuleHead, ParsingTable *pParsingTable, const char *string);
 void PrintParsingStack(ParsingStack *pStack);
 #endif PARSER_H_

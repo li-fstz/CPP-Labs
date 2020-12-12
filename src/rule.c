@@ -4,19 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*
-功能：
-    初始化文法链表。
-
-返回值：
-    文法的头指针。
-
 /**
- * @brief
+ * @brief 初始化文法链表
  *
- * @param rule_table
- * @param nRuleCount
- * @return Rule*
+ * @param rule_table 原始文法实体的指针
+ * @param nRuleCount 文法的数量
+ * @return Rule* 文法链表的头指针
  */
 Rule *InitRules(const struct RULE_ENTRY *rule_table, int nRuleCount) {
     Rule *pRuleHead, *pRule;
@@ -54,21 +47,11 @@ Rule *InitRules(const struct RULE_ENTRY *rule_table, int nRuleCount) {
     return pRuleHead;
 }
 
-/*
-功能：
-    创建一个新的 Rule。
-
-参数：
-    pRuleName -- 文法的名字。
-
-返回值：
-    Rule 指针
-
 /**
- * @brief Create a Rule object
+ * @brief 创建一个新的文法并初始化
  *
- * @param pRuleName
- * @return Rule*
+ * @param pRuleName 文法的名字
+ * @return Rule* 新文法的指针
  */
 Rule *CreateRule(const char *pRuleName) {
     Rule *pRule = (Rule *)malloc(sizeof(Rule));
@@ -78,17 +61,10 @@ Rule *CreateRule(const char *pRuleName) {
     return pRule;
 }
 
-/*
-功能：
-    创建一个新的 Symbol。
-
-返回值：
-    Symbol 指针
-
 /**
- * @brief Create a Symbol object
+ * @brief 创建一个新符号并初始化
  *
- * @return Symbol*
+ * @return 新符号的指针
  */
 Symbol *CreateSymbol() {
     Symbol *pSymbol = (Symbol *)malloc(sizeof(Symbol));
@@ -100,23 +76,12 @@ Symbol *CreateSymbol() {
     return pSymbol;
 }
 
-/*
-功能：
-    根据 RuleName 在文法链表中查找名字相同的文法。
-
-参数：
-    pRuleHead -- 文法链表的头指针。
-    RuleName -- 文法的名字。
-
-返回值：
-    如果存在名字相同的文法返回 Rule 指针，否则返回 NULL
-
 /**
- * @brief
+ * @brief 从文法链表中使用名字查找文法
  *
- * @param pRuleHead
- * @param RuleName
- * @return Rule*
+ * @param pRuleHead 文法链表的头指针
+ * @param RuleName 文法的名字
+ * @return Rule* 如果存在该文法则返回文法的指针，否则返回 NULL
  */
 Rule *FindRule(Rule *pRuleHead, const char *RuleName) {
     Rule *pRule;
@@ -128,17 +93,10 @@ Rule *FindRule(Rule *pRuleHead, const char *RuleName) {
     return pRule;
 }
 
-/*
-功能：
-    输出文法。
-
-参数：
-    pRuleHead -- 文法链表的头指针。
-
 /**
- * @brief
+ * @brief 输出文法
  *
- * @param pRuleHead
+ * @param pRuleHead 文法链表的头指针
  */
 void PrintRule(Rule *pRuleHead) {
     if (pRuleHead) {
@@ -155,6 +113,12 @@ void PrintRule(Rule *pRuleHead) {
     }
 }
 
+/**
+ * @brief 复制整个文法链表
+ * 
+ * @param pRuleHead 文法链表的头指针
+ * @return Rule* 新文法链表的头指针
+ */
 Rule *CopyRule(Rule *pRuleHead) {
     if (pRuleHead == NULL) {
         return NULL;
@@ -173,21 +137,11 @@ Rule *CopyRule(Rule *pRuleHead) {
     return pCopiedHead;
 }
 
-/*
-功能：
-        拷贝一个 Symbol。
-
-参数：
-        pSymbolTemplate -- 需要被拷贝的 Symbol 指针。
-
-返回值：
-        拷贝获得的新 Symbol 的指针。
-
 /**
- * @brief
+ * @brief 复制一个符号
  *
- * @param pSymbolTemplate
- * @return Symbol*
+ * @param pSymbolTemplate 被复制的符号的指针
+ * @return Symbol* 新符号的指针
  */
 Symbol *CopySymbol(const Symbol *pSymbolTemplate) {
     if (pSymbolTemplate == NULL) {
@@ -198,23 +152,13 @@ Symbol *CopySymbol(const Symbol *pSymbolTemplate) {
     return pTmp;
 }
 
-/*
-功能：
-        拷贝一个 Production。
-
-参数：
-        pProductionTemplate -- 需要被拷贝的 Production 指针。
-
-返回值：
-        拷贝获得的新 Production 的指针。
-
 /**
- * @brief
+ * @brief 复制一个产生式
  *
- * @param pProductionTemplate
- * @return Symbol*
+ * @param pProductionTemplate 被产生式的产生式指针
+ * @return Symbol* 新产生式的指针
  */
-Symbol *CopyProduction(const Production *pProductionTemplate) {
+Production *CopyProduction(const Production *pProductionTemplate) {
     if (pProductionTemplate == NULL) {
         return NULL;
     }

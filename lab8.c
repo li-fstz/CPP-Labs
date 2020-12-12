@@ -5,15 +5,13 @@
 #include "parser.h"
 #include "parsingtable.h"
 
-/* exp -> exp addop term| term
-   addop -> + | -
-   term -> term mulop factor | factor
-   mulop -> *
-   factor -> (exp) | number */
-
 /**
  * @brief
- *
+ * exp -> exp addop term| term
+ * addop -> + | -
+ * term -> term mulop factor | factor
+ * mulop -> *
+ * factor -> (exp) | number
  */
 const struct RULE_ENTRY rule_table[] = {
     {"E", {{{0, "T"}, {0, "E'"}}}},
@@ -47,22 +45,22 @@ int main(int argc, char *argv[]) {
     //
     // 调用 First 函数求文法的 First 集合
     //
-    GenFirstSet(pRuleHead, &VoidTable, &FirstSetList);
-    PrintFirstSet(&FirstSetList);
+    GenFirstSetList(pRuleHead, &VoidTable, &FirstSetList);
+    PrintFirstSetList(&FirstSetList);
 
     //
     // 调用 Follow 函数求文法的 First 集合、Follow 集合
     //
-    GenFollowSet(pRuleHead, &VoidTable, &FollowSetList, &FirstSetList);
-    PrintFollowSet(&FollowSetList);
+    GenFollowSetList(pRuleHead, &VoidTable, &FirstSetList, &FollowSetList);
+    PrintFollowSetList(&FollowSetList);
 
     SelectSetList SelectSetList;
-    GenSelectSet(pRuleHead, &VoidTable, &FirstSetList, &FollowSetList,
+    GenSelectSetList(pRuleHead, &VoidTable, &FirstSetList, &FollowSetList,
                  &SelectSetList);
-    PrintSelectSet(&SelectSetList);
+    PrintSelectSetList(&SelectSetList);
 
     ParsingTable ParsingTable;
-    GenParsingTable(pRuleHead, &ParsingTable, &SelectSetList);
+    GenParsingTable(pRuleHead, &SelectSetList, &ParsingTable);
     PrintParsingTable(&ParsingTable);
 
     Parse(pRuleHead, &ParsingTable, "i+i*i#");

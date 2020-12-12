@@ -9,7 +9,7 @@ typedef struct {
     char **pTableHead;
     struct {
         Rule *pRule;                    // 指向下一个 Symbol
-        struct Symbol *Productions[32]; // 指向下一个 Select
+        struct Production *Productions[32]; // 指向下一个 Select
     } TableRows[32];
 } ParsingTable;
 
@@ -31,15 +31,16 @@ void AddOneSelectSet(SelectSetList *pSetList, const Rule *pRule,
 int AddTerminalToSelectSet(SelectSet *pSet, const char *pTerminal);
 int AddSetToSelectSet(SelectSet *pDesSet, const Set *pSrcSet);
 int RemoveVoidFromSelectSet(SelectSet *pSet);
-void GenSelectSet(Rule *pRule, VoidTable *pVoidTable, SetList *pFirstSetList,
-                  SetList *pFollowSetList, SelectSetList *pProductionSetList);
-void GenParsingTable(Rule *pRule, ParsingTable *pTable,
-                     SelectSetList *pProductionSetList);
+void GenSelectSetList(Rule *pRuleHead, VoidTable *pVoidTable,
+                      SetList *pFirstSetList, SetList *pFollowSetList,
+                      SelectSetList *pSelectSetList);
+void GenParsingTable(Rule *pRuleHead, SelectSetList *pProductionSetList,
+                     ParsingTable *pTable);
 Production **FindProduction(ParsingTable *pParsingTable, Rule *pRule,
-                        const char *Terminal);
-void PrintSelectSet(SelectSetList *pProductionSetList);
+                            const char *Terminal);
+void PrintSelectSetList(SelectSetList *pProductionSetList);
 void PrintParsingTable(ParsingTable *PrintParsingTable);
-char **GetTerminals(Rule *pRule);
+char **GetTerminals(Rule *pRuleHead);
 void PrintProduction(Production *pProduction);
 
 #endif /* TableRow_H_ */

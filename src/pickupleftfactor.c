@@ -8,7 +8,7 @@
 /**
  * @brief 提取左因子
  *
- * @param pRuleHead 文法的头指针
+ * @param pRuleHead 文法链表的头指针
  */
 void PickupLeftFactor(Rule *pRuleHead) {
     Rule *pRule;                     // Rule 游标
@@ -44,7 +44,7 @@ void PickupLeftFactor(Rule *pRuleHead) {
             GetSymbol(pProductionTemplate, Count - 1)->pNextSymbol = pTmp;
             // 从模板之后的位置循环查找包含左因子的 Production，并提取左因子
             pProduction = pProductionTemplate->pNextProduction;
-            Symbol **pProductionPtr = &pProductionTemplate->pNextProduction;
+            Production **pProductionPtr = &pProductionTemplate->pNextProduction;
             while (pProduction != NULL) {
                 if (NeedPickup(pProductionTemplate, Count,
                                pProduction)) // Production 包含左因子
@@ -79,7 +79,7 @@ void PickupLeftFactor(Rule *pRuleHead) {
  *
  * @param pProduction Production 的指针
  * @param index 下标
- * @return Symbol* 如果找到返回 Symbol 的指针，否则返回 NULL
+ * @return Symbol* 如果找到则返回 Symbol 的指针，否则返回 NULL
  */
 Symbol *GetSymbol(Production *pProduction, int index) {
     int i = 0;
@@ -101,7 +101,7 @@ Symbol *GetSymbol(Production *pProduction, int index) {
  */
 int LeftFactorMaxLength(Production *pProduction) {
     int maxLength = 0;
-    Symbol *pCmpProduction = pProduction->pNextProduction;
+    Production *pCmpProduction = pProduction->pNextProduction;
     while (pCmpProduction) {
         int length = 0;
         for (int i = 0;; i++) {
@@ -137,25 +137,12 @@ int SymbolCmp(Symbol *pSymbol1, Symbol *pSymbol2) {
     }
 }
 
-/*
-功能：
-        取文法中的一个 Production 与 ProductionTemplate 进行比较，判断该
-Production 是否需要提取左因子。
-
-参数：
-        pProductionTemplate -- 作为模板的 Production 指针。
-        Count -- ProductionTemplate 中已确定的左因子的数量。
-        pProduction -- Production 指针。
-
-返回值：
-        如果 Production 包含左因子返回 1，否则返回 0。
-
 /**
- * @brief
+ * @brief 判断产生式是否需要被替换
  *
- * @param pProductionTemplate
- * @param Count
- * @param pProduction
+ * @param pProductionTemplate 模板产生式的指针
+ * @param Count 指定要比较的符号个数
+ * @param pProduction 产生式的指针
  * @return int
  */
 int NeedPickup(Production *pProductionTemplate, int Count,
@@ -170,29 +157,20 @@ int NeedPickup(Production *pProductionTemplate, int Count,
     return 1;
 }
 
-/*
-功能：
-        将一个 Production 加入到文法末尾，当 Production 为 NULL
-时就将一个ε终结符加入到文法末尾。
-
-参数：
-        pRule -- 文法指针。
-        pNewProduction -- Production 指针。
-
 /**
- * @brief
+ * @brief 将产生式加入到文法中的产生式链表中
  *
- * @param pRule
- * @param pNewProduction
+ * @param pRule 文法的指针
+ * @param pNewProduction 产生式的指针
  */
-void AddProductionToRule(Rule *pRule, Symbol *pNewProduction) {
+void AddProductionToRule(Rule *pRule, Production *pNewProduction) {
     if (!pNewProduction) {
         pNewProduction = CreateSymbol();
         pNewProduction->isToken = 1;
         strcpy(pNewProduction->SymbolName, VOID_SYMBOL);
     }
     if (pRule->pFirstProduction) {
-        Symbol *pTmp = pRule->pFirstProduction;
+        Production *pTmp = pRule->pFirstProduction;
         while (pTmp->pNextProduction) {
             pTmp = pTmp->pNextProduction;
         }
@@ -202,19 +180,11 @@ void AddProductionToRule(Rule *pRule, Symbol *pNewProduction) {
     }
 }
 
-/*
-功能：
-        将 pRuleName 与文法中的其他 RuleName 比较, 如果相同就增加一个后缀。
-
-参数：
-        pRuleHead -- Rule 链表的头指针。
-        pRuleName -- Rule 的名字。
-
 /**
- * @brief Get the Unique Rule Name object
+ * @brief 得到一个不重复的新文法名，如果存在冲突则添加后缀
  *
- * @param pRuleHead
- * @param pRuleName
+ * @param pRuleHead 文法链表的头指针
+ * @param pRuleName 像取得新文法名
  */
 void GetUniqueRuleName(Rule *pRuleHead, char *pRuleName) {
     Rule *pRuleCursor = pRuleHead;
@@ -228,17 +198,10 @@ void GetUniqueRuleName(Rule *pRuleHead, char *pRuleName) {
     }
 }
 
-/*
-功能：
-        释放一个 Production 的内存。
-
-参数：
-        pProduction -- 需要释放的 Production 的指针。
-
 /**
- * @brief
+ * @brief 释放整个产生式链表的内存
  *
- * @param pProduction
+ * @param pProduction 产生式链表的头指针
  */
 void FreeProduction(Production *pProduction) {
     if (pProduction->pNextSymbol) {

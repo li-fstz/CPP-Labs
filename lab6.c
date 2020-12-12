@@ -3,11 +3,9 @@
 
 #include "removeleftrecursion1.h"
 
-/* A -> Aa | bA | c | Ad */
-
 /**
  * @brief
- *
+ * A -> Aa | bA | c | Ad
  */
 const struct RULE_ENTRY rule_table[] = {{"A",
                                          {{{0, "A"}, {1, "a"}},

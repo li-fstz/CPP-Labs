@@ -3,15 +3,13 @@
 #include "rule.h"
 #include "voidtable.h"
 
-/* S -> AB | bC
-   A -> $ | b
-   B -> $ | aD
-   C -> AD | b
-   D -> aS | c */
-
 /**
- * @brief
- *
+ * @brief 
+ * S -> AB | bC
+ * A -> $ | b
+ * B -> $ | aD
+ * C -> AD | b
+ * D -> aS | c
  */
 const struct RULE_ENTRY rule_table[] = {
     {"S", {{{0, "A"}, {0, "B"}}, {{1, "b"}, {0, "C"}}}},

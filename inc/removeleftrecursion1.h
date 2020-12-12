@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 void AddSymbolToProduction(Production *pProduction, Symbol *pNewSymbol);
-void AddProductionToRule(Rule *pRule, Symbol *pNewProduction);
+void AddProductionToRule(Rule *pRule, Production *pNewProduction);
 void RemoveLeftRecursion(Rule *pRuleHead);
 
 #endif /* REMOVELEFTRECURSIONNOREPLACE_H_ */

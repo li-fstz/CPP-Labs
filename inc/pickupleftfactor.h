@@ -11,7 +11,7 @@ int LeftFactorMaxLength(Production *pProductionTemplate);
 int SymbolCmp(Symbol *pSymbol1, Symbol *pSymbol2);
 int NeedPickup(Production *pProductionTemplate, int Count,
                Production *pProduction);
-void AddProductionToRule(Rule *pRule, Symbol *pSymbol);
+void AddProductionToRule(Rule *pRule, Production *pProduction);
 void GetUniqueRuleName(Rule *pRuleHead, char *pRuleName);
 void PickupLeftFactor(Rule *pRuleHead);
 void FreeProduction(Production *pProduction);

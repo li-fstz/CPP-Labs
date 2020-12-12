@@ -5,11 +5,9 @@
 #include "pickupleftfactor.h"
 #include "rule.h"
 
-/* A -> abC | abcD | abcE */
-
 /**
  * @brief
- *
+ * A -> abC | abcD | abcE
  */
 const struct RULE_ENTRY rule_table[] = {
     {"A",

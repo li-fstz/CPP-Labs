@@ -3,12 +3,10 @@
 
 #include "removeleftrecursion2.h"
 
-/* A -> Ba | Aa | c
-   B -> Bb | Ab | d */
-
 /**
  * @brief
- *
+ * A -> Ba | Aa | c
+ * B -> Bb | Ab | d
  */
 const struct RULE_ENTRY rule_table[] = {
     {"A", {{{0, "B"}, {1, "a"}}, {{0, "A"}, {1, "a"}}, {{1, "c"}}}},
