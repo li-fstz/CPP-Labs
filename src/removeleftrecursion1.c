@@ -42,39 +42,46 @@ void AddProductionToRule(Rule *pRule, Production *pNewProduction) {
  * @param pRuleHead 文法链表的头指针
  */
 void RemoveLeftRecursion(Rule *pRuleHead) {
-    Production *pProduction;                    // Production 游标
-    Rule *pNewRule;                             // Rule 指针
-    pNewRule = CreateRule(pRuleHead->RuleName); // 创建新 Rule
-    strcat(pNewRule->RuleName, POSTFIX);
-    pProduction = pRuleHead->pFirstProduction; // 初始化 Production 游标
+    Rule *pNewRule;
+    Production *pProduction = pRuleHead->pFirstProduction;
     Production **pProductionPrePtr = &pRuleHead->pFirstProduction;
-    while (pProduction != NULL) // 循环处理所有的 Production
-    {
+
+    /**
+     * @brief 创建一条新文法
+     */
+    pNewRule = CreateRule(pRuleHead->RuleName);
+    strcat(pNewRule->RuleName, POSTFIX);
+
+    while (pProduction != NULL) {
+
+        /**
+         * @brief 创建新文法的符号
+         */
         Symbol *pTmp = CreateSymbol();
         pTmp->isToken = 0;
         pTmp->pRule = pNewRule;
         strcpy(pTmp->SymbolName, pNewRule->RuleName);
-        if (0 == pProduction->isToken &&
-            pProduction->pRule == pRuleHead) // Production 存在左递归
-        {
-            // 移除包含左递归的 Production，将其转换为右递归后添加到新 Rule
-            // 的末尾，并移动游标
+
+        /**
+         * @brief 如果当前产生式包含左递归，则移除此产生式，
+         * 然后将此产生式的左递归转换为右递归，然后将其加入到新文法中；
+         * 如果当前产生式不包含左递归，则在产生式尾部添加新文法的符号。
+         */
+        if (0 == pProduction->isToken && pProduction->pRule == pRuleHead) {
             *pProductionPrePtr = (*pProductionPrePtr)->pNextProduction;
             pProduction = pProduction->pNextSymbol;
             AddSymbolToProduction(pProduction, pTmp);
             AddProductionToRule(pNewRule, pProduction);
             pProduction = *pProductionPrePtr;
-        } else // Production 不存在左递归
-        {
-            // 在没有左递归的 Production 末尾添加指向新 Rule
-            // 的非终结符，并移动游标
+        } else {
             AddSymbolToProduction(pProduction, pTmp);
             pProductionPrePtr = &(*pProductionPrePtr)->pNextProduction;
             pProduction = pProduction->pNextProduction;
         }
     }
-    // 在新 Rule 的最后加入ε(用 '$' 代替)
-    // 将新 Rule 插入文法链表
+    /**
+     * @brief 向新文法添加 ε 产生式，然后将新文法加入到文法链表中
+     */
     AddProductionToRule(pNewRule, NULL);
     while (pRuleHead->pNextRule) {
         pRuleHead = pRuleHead->pNextRule;

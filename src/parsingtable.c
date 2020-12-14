@@ -14,19 +14,28 @@
  * @param pFollowSetList Follow 集的指针
  * @param pSelectSetList Select 集的指针
  */
-void GenSelectSetList(Rule *pRuleHead, VoidTable *pVoidTable,
-                      SetList *pFirstSetList, SetList *pFollowSetList,
+void GenSelectSetList(const Rule *pRuleHead, const VoidTable *pVoidTable,
+                      const SetList *pFirstSetList,
+                      const SetList *pFollowSetList,
                       SelectSetList *pSelectSetList) {
     for (; pRuleHead != NULL; pRuleHead = pRuleHead->pNextRule) {
         for (Production *pProduction = pRuleHead->pFirstProduction;
              pProduction != NULL; pProduction = pProduction->pNextProduction) {
+
+            /**
+             * @brief Select 集中的每个子集对应文法中的每一条产生式
+             * 首先将这条产生式对应的 First 集中的符号加入到 Select 子集中
+             */
             AddOneSelectSet(pSelectSetList, pRuleHead, pProduction);
-            SelectSet *pSelectSet = GetSelectSet(pSelectSetList, pProduction);
+            SelectSet *pSelectSet =
+                pSelectSetList->Sets + pSelectSetList->nSetCount - 1;
             for (Symbol *pSymbol = pProduction; pSymbol != NULL;
                  pSymbol = pSymbol->pNextSymbol) {
                 if (pSymbol->isToken) {
                     AddTerminalToSelectSet(pSelectSet, pSymbol->SymbolName);
-                    break;
+                    if (strcmp(pSymbol->SymbolName, VOID_SYMBOL) != 0) {
+                        break;
+                    }
                 } else {
                     AddSetToSelectSet(
                         pSelectSet, GetSet(pFirstSetList, pSymbol->SymbolName));
@@ -35,6 +44,11 @@ void GenSelectSetList(Rule *pRuleHead, VoidTable *pVoidTable,
                     }
                 }
             }
+
+            /**
+             * @brief 如果该产生式对应的 First 子集中包含 ε
+             * 则去除 ε，并且向其中加入文法对应的 Follow 子集中的符号
+             */
             if (RemoveVoidFromSelectSet(pSelectSet)) {
                 AddSetToSelectSet(pSelectSet,
                                   GetSet(pFollowSetList, pRuleHead->RuleName));
@@ -50,7 +64,7 @@ void GenSelectSetList(Rule *pRuleHead, VoidTable *pVoidTable,
  * @param pSelectSetList Select 集的指针
  * @param pParsingTable 预测分析标的指针
  */
-void GenParsingTable(Rule *pRuleHead, SelectSetList *pSelectSetList,
+void GenParsingTable(const Rule *pRuleHead, const SelectSetList *pSelectSetList,
                      ParsingTable *pParsingTable) {
     memset(pParsingTable, 0, sizeof(ParsingTable));
     pParsingTable->pTableHead = GetTerminals(pRuleHead);
@@ -79,7 +93,7 @@ void GenParsingTable(Rule *pRuleHead, SelectSetList *pSelectSetList,
  *
  * @param pSelectSetList Select 集的指针
  */
-void PrintSelectSetList(SelectSetList *pSelectSetList) {
+void PrintSelectSetList(const SelectSetList *pSelectSetList) {
     printf("\nThe Select Set:\n");
     for (int i = 0; i < pSelectSetList->nSetCount; i++) {
         printf("Select(%s->", pSelectSetList->Sets[i].pRule->RuleName);
@@ -98,7 +112,7 @@ void PrintSelectSetList(SelectSetList *pSelectSetList) {
  *
  * @param pParsingTable 预测分析表的指针
  */
-void PrintParsingTable(ParsingTable *pParsingTable) {
+void PrintParsingTable(const ParsingTable *pParsingTable) {
     putchar('\t');
     for (int i = 0; i < pParsingTable->ColCount; i++) {
         printf("%s%c", pParsingTable->pTableHead[i],
@@ -144,7 +158,8 @@ int RemoveVoidFromSelectSet(SelectSet *pSelectSet) {
  * @param pProduction 产生式的指针
  * @return SelectSet* 如果找到则返回子集的指针，否则返回 NULL
  */
-SelectSet *GetSelectSet(SelectSetList *pSetList, const Production *pProduction) {
+SelectSet *GetSelectSet(const SelectSetList *pSetList,
+                        const Production *pProduction) {
     for (int i = 0; i < pSetList->nSetCount; i++) {
         if (pSetList->Sets[i].pProduction == pProduction) {
             return pSetList->Sets + i;
@@ -211,7 +226,7 @@ int AddSetToSelectSet(SelectSet *pDesSet, const Set *pSrcSet) {
  * @param pRuleHead 文法链表的头指针
  * @return char** 终结符数组
  */
-char **GetTerminals(Rule *pRuleHead) {
+char **GetTerminals(const Rule *pRuleHead) {
     char **pTerminals = calloc(32, sizeof(char *));
     int t;
     for (; pRuleHead != NULL; pRuleHead = pRuleHead->pNextRule) {
@@ -246,8 +261,8 @@ char **GetTerminals(Rule *pRuleHead) {
  * @param Terminal 终结符
  * @return Symbol** 如果存在则返回该产生式在预测分析表中的位置，否则返回 NULL
  */
-Production **FindProduction(ParsingTable *pParsingTable, Rule *pRule,
-                        const char *Terminal) {
+Production **FindProduction(const ParsingTable *pParsingTable,
+                            const Rule *pRule, const char *Terminal) {
     int i;
     for (i = 0; i < pParsingTable->ColCount; i++) {
         if (strcmp(pParsingTable->pTableHead[i], Terminal) == 0) {
@@ -267,7 +282,7 @@ Production **FindProduction(ParsingTable *pParsingTable, Rule *pRule,
  *
  * @param pProduction 产生式的指针
  */
-void PrintProduction(Production *pProduction) {
+void PrintProduction(const Production *pProduction) {
     for (; pProduction != NULL; pProduction = pProduction->pNextSymbol) {
         printf(pProduction->SymbolName);
     }

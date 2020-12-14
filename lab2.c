@@ -21,36 +21,23 @@ const struct RULE_ENTRY rule_table[] = {
     {"factor", {{{1, "("}, {0, "exp"}, {1, ")"}}, {{1, "number"}}}}};
 
 int main(int argc, char *argv[]) {
-    //
-    // 调用 InitRules 函数初始化文法
-    //
     Rule *pRuleHead =
         InitRules(rule_table, sizeof(rule_table) / sizeof(struct RULE_ENTRY));
-
-    //
-    // 输出文法
-    //
     PrintRule(pRuleHead);
-
-    //
-    // 调用 VoidTable 函数求文法的空表
-    //
-
     VoidTable VoidTable;
     GenVoidTable(pRuleHead, &VoidTable);
     PrintVoidTable(&VoidTable);
 
-    //
-    // 调用 First 函数求文法的 First 集合
-    //
+    /**
+     * @brief 调用 GenFirstSetList 函数求文法的 First 集合
+     */
     SetList FirstSetList;
     FirstSetList.nSetCount = 0;
     GenFirstSetList(pRuleHead, &VoidTable, &FirstSetList);
 
-    //
-    // 输出First集合
-    //
+    /**
+     * @brief 输出 First 集
+     */
     PrintFirstSetList(&FirstSetList);
-
     return 0;
 }

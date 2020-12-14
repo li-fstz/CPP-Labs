@@ -7,9 +7,9 @@
 #include "rule.h"
 #include "voidtable.h"
 
-void GenFollowSetList(const Rule *pRuleHead, VoidTable *pVoidTable,
-                      SetList *pFirstSetList, SetList *pFollowSetList);
-void PrintFollowSetList(SetList *pFollowSetList);
+void GenFollowSetList(const Rule *pRuleHead, const VoidTable *pVoidTable,
+                      const SetList *pFirstSetList, SetList *pFollowSetList);
+void PrintFollowSetList(const SetList *pFollowSetList);
 void RemoveVoidFromSet(Set *pSet);
 
-#endif /* FOLLOW_H_ */
+#endif

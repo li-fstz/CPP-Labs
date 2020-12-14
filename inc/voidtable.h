@@ -4,16 +4,16 @@
 #include "rule.h"
 
 typedef struct {
-    int ColCount;
-    char **pTableHead;
+    int ColCount;      // 列宽
+    char **pTableHead; // 表头
     struct {
-        int hasVoid[32];
+        int hasVoid[32]; // 是否为空
     } TableRows[1];
 } VoidTable;
 
-void GenVoidTable(Rule *pRuleHead, VoidTable *pTable);
+void GenVoidTable(const Rule *pRuleHead, VoidTable *pTable);
 int *FindHasVoid(VoidTable *pTable, const char *RuleName);
-void PrintVoidTable(VoidTable *pTable);
+void PrintVoidTable(const VoidTable *pTable);
 char **GetNonTerminals(const Rule *pRuleHead);
 
-#endif /* VOIDTABLE_H_ */
+#endif

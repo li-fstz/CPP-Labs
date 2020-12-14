@@ -10,4 +10,4 @@ void AddSymbolToProduction(Production *pProduction, Symbol *pNewSymbol);
 void AddProductionToRule(Rule *pRule, Production *pNewProduction);
 void RemoveLeftRecursion(Rule *pRuleHead);
 
-#endif /* REMOVELEFTRECURSIONNOREPLACE_H_ */
+#endif

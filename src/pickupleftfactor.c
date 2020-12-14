@@ -11,16 +11,22 @@
  * @param pRuleHead 文法链表的头指针
  */
 void PickupLeftFactor(Rule *pRuleHead) {
-    Rule *pRule;                     // Rule 游标
-    int isChange;                    // Rule 是否被提取左因子的标志
-    Production *pProductionTemplate; // Production 游标
-    Rule *pNewRule;                  // Rule 指针
-    Production *pProduction;         // Production 游标
+    Rule *pRule, *pNewRule;
+    Production *pProduction, *pProductionTemplate;
+
+    /**
+     * @brief 对文法是否修改的标志
+     */
+    int isChange;
+
     do {
         isChange = 0;
         for (pRule = pRuleHead; pRule != NULL; pRule = pRule->pNextRule) {
-            // 取 Rule 中的一个 Production 作为模板，调用 LeftFactorMaxLength
-            // 函数确定左因子的最大长度
+
+            /**
+             * @brief 从当前文法指向的产生式链表中以一条产生式为模板
+             * 求出后续产生式的最长的左因子长度
+             */
             int Count = 0;
             for (pProductionTemplate = pRule->pFirstProduction;
                  pProductionTemplate != NULL;
@@ -28,44 +34,61 @@ void PickupLeftFactor(Rule *pRuleHead) {
                 if ((Count = LeftFactorMaxLength(pProductionTemplate)) > 0)
                     break;
             }
-            // 忽略没用左因子的 Rule
-            if (Count == 0)
+
+            /**
+             * @brief 如果当前文法没有左因子则继续判断下一条文法
+             */
+            if (Count == 0) {
                 continue;
-            pNewRule = CreateRule(pRule->RuleName); // 创建新 Rule
+            }
+
+            /**
+             * @brief 创建一条以当前文法为名称模板的新文法
+             */
+            pNewRule = CreateRule(pRule->RuleName);
             GetUniqueRuleName(pRule, pNewRule->RuleName);
-            isChange = 1; // 设置标志
-            // 调用 AddProductionToRule 函数把模板左因子之后的部分加到新 Rule
-            // 的末尾 将模板左因子之后的部分替换为指向新 Rule 的非终结符
+
+            isChange = 1;
+
+            /**
+             * @brief 把模板产生式左因子之后的产生式加入到新文法中
+             * 然后将其替换为新文法的符号
+             */
             AddProductionToRule(pNewRule,
                                 GetSymbol(pProductionTemplate, Count));
             Symbol *pTmp = CreateSymbol();
             pTmp->isToken = 0;
             pTmp->pRule = pNewRule;
+            strcpy(pTmp->SymbolName, pNewRule->RuleName);
             GetSymbol(pProductionTemplate, Count - 1)->pNextSymbol = pTmp;
-            // 从模板之后的位置循环查找包含左因子的 Production，并提取左因子
+
+            /**
+             * @brief 在模板产生式之后查找包含左因子的产生式，然后提取左因子
+             */
             pProduction = pProductionTemplate->pNextProduction;
             Production **pProductionPtr = &pProductionTemplate->pNextProduction;
             while (pProduction != NULL) {
-                if (NeedPickup(pProductionTemplate, Count,
-                               pProduction)) // Production 包含左因子
-                {
-                    // 调用 AddProductionToRule 函数把左因子之后的部分加到新
-                    // Rule 的末尾 将该 Production 从 Rule
-                    // 中移除，释放内存，并移动游标
+
+                /**
+                 * @brief 如果产生式中包含左因子，则将左因子后的产生式
+                 * 加入到新文法中，并将该产生式从文法中移除
+                 */
+                if (NeedPickup(pProductionTemplate, Count, pProduction)) {
                     AddProductionToRule(pNewRule,
                                         GetSymbol(pProduction, Count));
                     *pProductionPtr = pProduction->pNextProduction;
                     GetSymbol(pProduction, Count - 1)->pNextSymbol = NULL;
                     FreeProduction(pProduction);
                     pProduction = *pProductionPtr;
-                } else // Production 不包含左因子
-                {
-                    // 移动游标
+                } else {
                     pProductionPtr = &pProduction->pNextProduction;
                     pProduction = pProduction->pNextProduction;
                 }
             }
-            // 将新 Rule 加入到文法链表
+
+            /**
+             * @brief 将新文法加入到文法链表中
+             */
             while (pRule->pNextRule) {
                 pRule = pRule->pNextRule;
             }
@@ -101,19 +124,15 @@ Symbol *GetSymbol(Production *pProduction, int index) {
  */
 int LeftFactorMaxLength(Production *pProduction) {
     int maxLength = 0;
-    Production *pCmpProduction = pProduction->pNextProduction;
-    while (pCmpProduction) {
+    for (Production *pCmpProduction = pProduction->pNextProduction;
+         pCmpProduction != NULL;
+         pCmpProduction = pCmpProduction->pNextProduction) {
         int length = 0;
-        for (int i = 0;; i++) {
-            Symbol *pA = GetSymbol(pProduction, i),
-                   *pB = GetSymbol(pCmpProduction, i);
-            if (!pA || !pB || !SymbolCmp(pA, pB)) {
-                length = i;
-                break;
-            }
+        for (Symbol *pA = pProduction, *pB = pCmpProduction;
+             !pA || !pB || !SymbolCmp(pA, pB);
+             length++, pA = pA->pNextSymbol, pB = pB->pNextSymbol) {
         }
         maxLength = length > maxLength ? length : maxLength;
-        pCmpProduction = pCmpProduction->pNextProduction;
     }
     return maxLength;
 }
@@ -125,7 +144,7 @@ int LeftFactorMaxLength(Production *pProduction) {
  * @param pSymbol2 Symbol2 的指针
  * @return int 是否相等
  */
-int SymbolCmp(Symbol *pSymbol1, Symbol *pSymbol2) {
+int SymbolCmp(const Symbol *pSymbol1, const Symbol *pSymbol2) {
     if (pSymbol1->isToken == pSymbol2->isToken) {
         if (pSymbol1->isToken) {
             return strcmp(pSymbol1->SymbolName, pSymbol2->SymbolName) == 0;
@@ -145,11 +164,11 @@ int SymbolCmp(Symbol *pSymbol1, Symbol *pSymbol2) {
  * @param pProduction 产生式的指针
  * @return int
  */
-int NeedPickup(Production *pProductionTemplate, int Count,
-               Production *pProduction) {
-    for (int i = 0; i < Count; i++) {
-        Symbol *pA = GetSymbol(pProductionTemplate, i),
-               *pB = GetSymbol(pProduction, i);
+int NeedPickup(const Production *pProductionTemplate, int Count,
+               const Production *pProduction) {
+    Symbol *pA = pProductionTemplate, *pB = pProduction;
+    for (int i = 0; i < Count;
+         i++, pA = pA->pNextSymbol, pB = pB->pNextSymbol) {
         if (!pA || !pB || !SymbolCmp(pA, pB)) {
             return 0;
         }
@@ -161,22 +180,22 @@ int NeedPickup(Production *pProductionTemplate, int Count,
  * @brief 将产生式加入到文法中的产生式链表中
  *
  * @param pRule 文法的指针
- * @param pNewProduction 产生式的指针
+ * @param pProduction 产生式的指针
  */
-void AddProductionToRule(Rule *pRule, Production *pNewProduction) {
-    if (!pNewProduction) {
-        pNewProduction = CreateSymbol();
-        pNewProduction->isToken = 1;
-        strcpy(pNewProduction->SymbolName, VOID_SYMBOL);
+void AddProductionToRule(Rule *pRule, Production *pProduction) {
+    if (!pProduction) {
+        pProduction = CreateSymbol();
+        pProduction->isToken = 1;
+        strcpy(pProduction->SymbolName, VOID_SYMBOL);
     }
     if (pRule->pFirstProduction) {
         Production *pTmp = pRule->pFirstProduction;
         while (pTmp->pNextProduction) {
             pTmp = pTmp->pNextProduction;
         }
-        pTmp->pNextProduction = pNewProduction;
+        pTmp->pNextProduction = pProduction;
     } else {
-        pRule->pFirstProduction = pNewProduction;
+        pRule->pFirstProduction = pProduction;
     }
 }
 
@@ -186,7 +205,7 @@ void AddProductionToRule(Rule *pRule, Production *pNewProduction) {
  * @param pRuleHead 文法链表的头指针
  * @param pRuleName 像取得新文法名
  */
-void GetUniqueRuleName(Rule *pRuleHead, char *pRuleName) {
+void GetUniqueRuleName(const Rule *pRuleHead, char *pRuleName) {
     Rule *pRuleCursor = pRuleHead;
     for (; pRuleCursor != NULL;) {
         if (0 == strcmp(pRuleCursor->RuleName, pRuleName)) {

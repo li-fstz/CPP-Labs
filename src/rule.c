@@ -83,7 +83,7 @@ Symbol *CreateSymbol() {
  * @param RuleName 文法的名字
  * @return Rule* 如果存在该文法则返回文法的指针，否则返回 NULL
  */
-Rule *FindRule(Rule *pRuleHead, const char *RuleName) {
+Rule *FindRule(const Rule *pRuleHead, const char *RuleName) {
     Rule *pRule;
     for (pRule = pRuleHead; pRule != NULL; pRule = pRule->pNextRule) {
         if (0 == strcmp(pRule->RuleName, RuleName)) {
@@ -98,7 +98,7 @@ Rule *FindRule(Rule *pRuleHead, const char *RuleName) {
  *
  * @param pRuleHead 文法链表的头指针
  */
-void PrintRule(Rule *pRuleHead) {
+void PrintRule(const Rule *pRuleHead) {
     if (pRuleHead) {
         printf("%s->", pRuleHead->RuleName);
         for (Production *pProduction = pRuleHead->pFirstProduction;
@@ -115,11 +115,11 @@ void PrintRule(Rule *pRuleHead) {
 
 /**
  * @brief 复制整个文法链表
- * 
+ *
  * @param pRuleHead 文法链表的头指针
  * @return Rule* 新文法链表的头指针
  */
-Rule *CopyRule(Rule *pRuleHead) {
+Rule *CopyRule(const Rule *pRuleHead) {
     if (pRuleHead == NULL) {
         return NULL;
     }

@@ -4,7 +4,7 @@
 #include "voidtable.h"
 
 /**
- * @brief 
+ * @brief
  * S -> AB | bC
  * A -> $ | b
  * B -> $ | aD
@@ -19,25 +19,26 @@ const struct RULE_ENTRY rule_table[] = {
     {"D", {{{1, "a"}, {0, "S"}}, {{1, "c"}}}}};
 
 int main(int argc, char *argv[]) {
-    //
-    // 调用 InitRules 函数初始化文法
-    //
+    /**
+     * @brief 调用 InitRules 函数初始化文法
+     */
     Rule *pRuleHead =
         InitRules(rule_table, sizeof(rule_table) / sizeof(struct RULE_ENTRY));
 
-    //
-    // 输出文法
-    //
+    /**
+     * @brief 输出文法
+     */
     PrintRule(pRuleHead);
 
-    //
-    // 调用 VoidTable 函数求文法的空表
-    //
+    /**
+     * @brief 调用 GenVoidTable 函数求文法的空表
+     */
     VoidTable VoidTable;
     GenVoidTable(pRuleHead, &VoidTable);
-    //
-    // 输出空表
-    //
+
+    /**
+     * @brief 输出空表
+     */
     printf("\nThe Void Table:\n");
     PrintVoidTable(&VoidTable);
     return 0;

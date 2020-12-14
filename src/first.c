@@ -12,7 +12,7 @@
  *
  * @param pFirstSetList First 集指针
  */
-void PrintFirstSetList(SetList *pFirstSetList) {
+void PrintFirstSetList(const SetList *pFirstSetList) {
     printf("\nThe First Set:\n");
     for (int i = 0; i < pFirstSetList->nSetCount; i++) {
         printf("First(%s) = { ", pFirstSetList->Sets[i].Name);
@@ -34,13 +34,21 @@ void PrintFirstSetList(SetList *pFirstSetList) {
  * @param pVoidTable 空表的指针
  * @param pFirstSetList First 集的指针
  */
-void GenFirstSetList(const Rule *pRuleHead, VoidTable *pVoidTable,
+void GenFirstSetList(const Rule *pRuleHead, const VoidTable *pVoidTable,
                      SetList *pFirstSetList) {
-    const Rule *pRule; // Rule 指针
-    int isChange;      // First 集是否被修改的标志
-    Symbol *pSymbol;   // Symbol 游标
+    const Rule *pRule;
+    const Production *pProduction;
+    const Symbol *pSymbol;
 
-    //初始化 First 集
+    /**
+     * @brief First 集是否被修改的标志
+     */
+    int isChange;
+
+    /**
+     * @brief 初始化 First 集
+     * 如果该文法可以推出 ε，则向 First 集中加 ε
+     */
     for (pRule = pRuleHead; pRule != NULL; pRule = pRule->pNextRule) {
         AddOneSet(pFirstSetList, pRule->RuleName);
         if (*FindHasVoid(pVoidTable, pRule->RuleName)) {
@@ -50,34 +58,46 @@ void GenFirstSetList(const Rule *pRuleHead, VoidTable *pVoidTable,
     }
 
     do {
-        isChange = 0; // 设置修改标志
+        isChange = 0;
         for (pRule = pRuleHead; pRule != NULL; pRule = pRule->pNextRule) {
-            // 根据文法名称在 pFirstSetList 中查找 Set
+
+            /**
+             * @brief 该文法对应的 First 子集
+             */
             Set *pDesSet = GetSet(pFirstSetList, pRule->RuleName);
-            for (Production *pProduction = pRule->pFirstProduction;
-                 pProduction != NULL;
+            for (pProduction = pRule->pFirstProduction; pProduction != NULL;
                  pProduction = pProduction->pNextProduction) {
-                int hasVoid = 1; // First 集合中是否含有ε的标志
-                for (pSymbol = pProduction; pSymbol != NULL && hasVoid;
+                for (pSymbol = pProduction; pSymbol != NULL;
                      pSymbol = pSymbol->pNextSymbol) {
-                    if (pSymbol->isToken) // 终结符
-                    {
-                        // 调用 AddTerminalToSet 函数将终结符添加到
-                        // pDesSet，并设置修改标志
-                        if (AddTerminalToSet(pDesSet, pSymbol->SymbolName))
-                            isChange = 1;
-                        hasVoid = 0; // 设置 First 集合中是否含有ε的标志
-                    } else           // 非终结符
-                    {
-                        // 根据非终结符名称在 pFirstSetList 中查找 Set
+
+                    /**
+                     * @brief
+                     *
+                     * 如果是终结符，
+                     * 则将该终结符加入到该文法 First 子集中，
+                     * 并结束对该产生式的查找；
+                     *
+                     * 如果是非终结符，
+                     * 则将非终结符对应的文法 First 子集中的终结符添加到
+                     * 该文法 First 子集中，
+                     * 如果非终结符对应的文法不能推出空,则结束对该产生式的查找。
+                     */
+                    if (pSymbol->isToken) {
+                        isChange =
+                            AddTerminalToSet(pDesSet, pSymbol->SymbolName) ||
+                            isChange;
+                        break;
+                    } else {
+
+                        /**
+                         * @brief 非终结符对应的文法 First 子集
+                         */
                         Set *pSrcSet =
                             GetSet(pFirstSetList, pSymbol->SymbolName);
-
-                        // 调用 AddSetToSet 函数，将源 Set
-                        // 中的所有终结符添加到目标 Set 中，并设置修改标志
-                        if (AddSetToSet(pDesSet, pSrcSet))
-                            isChange = 1;
-                        hasVoid = *FindHasVoid(pVoidTable, pSrcSet->Name);
+                        isChange = AddSetToSet(pDesSet, pSrcSet) || isChange;
+                        if (!*FindHasVoid(pVoidTable, pSrcSet->Name)) {
+                            break;
+                        }
                     }
                 }
             }
@@ -107,7 +127,7 @@ void AddOneSet(SetList *pSetList, const char *pName) {
  * @param pName 非终结符子集名字
  * @return Set* 如果找到则返回子集的指针，否则返回 NULL
  */
-Set *GetSet(SetList *pSetList, const char *pName) {
+Set *GetSet(const SetList *pSetList, const char *pName) {
     for (int i = 0; i < pSetList->nSetCount; i++) {
         if (strcmp(pSetList->Sets[i].Name, pName) == 0) {
             return pSetList->Sets + i;
@@ -143,9 +163,7 @@ int AddTerminalToSet(Set *pSet, const char *Terminal) {
 int AddSetToSet(Set *pDesSet, const Set *pSrcSet) {
     int flag = 0;
     for (int i = 0; i < pSrcSet->nTerminalCount; i++) {
-        if (AddTerminalToSet(pDesSet, pSrcSet->Terminals[i])) {
-            flag = 1;
-        }
+        flag = AddTerminalToSet(pDesSet, pSrcSet->Terminals[i]) || flag;
     }
     return flag;
 }
