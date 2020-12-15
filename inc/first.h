@@ -16,8 +16,7 @@ typedef struct {
     int nSetCount; // 子集个数
 } SetList;
 
-void GenFirstSetList(const Rule *pRuleHead, const VoidTable *pVoidTable,
-                     SetList *pFirstSetList);
+SetList *GenFirstSetList(const Rule *pRuleHead, const VoidTable *pVoidTable);
 Set *GetSet(const SetList *pSetList, const char *pName);
 void AddOneSet(SetList *pSetList, const char *pName);
 int AddTerminalToSet(Set *pSet, const char *pTerminal);

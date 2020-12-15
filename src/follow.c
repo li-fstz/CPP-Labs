@@ -1,6 +1,7 @@
 #include "follow.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "first.h"
@@ -31,10 +32,13 @@ void RemoveVoidFromSet(Set *pSet) {
  * @param pRuleHead 文法链表的头指针
  * @param pVoidTable 空表的指针
  * @param pFirstSetList Follow 集的指针
- * @param pFollowSetList First 集的指针
+ * @return SetList* 生成 First 集的指针
  */
-void GenFollowSetList(const Rule *pRuleHead, const VoidTable *pVoidTable,
-                      const SetList *pFirstSetList, SetList *pFollowSetList) {
+SetList *GenFollowSetList(const Rule *pRuleHead, const VoidTable *pVoidTable,
+                          const SetList *pFirstSetList) {
+    SetList *pFollowSetList = malloc(sizeof(SetList));
+    pFollowSetList->nSetCount = 0;
+
     const Rule *pRule;
     const Production *pProduction;
     const Symbol *pSymbol;
@@ -128,6 +132,7 @@ void GenFollowSetList(const Rule *pRuleHead, const VoidTable *pVoidTable,
             }
         }
     } while (isChange);
+    return pFollowSetList;
 }
 
 /**

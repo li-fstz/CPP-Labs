@@ -32,13 +32,12 @@ void AddOneSelectSet(SelectSetList *pSetList, const Rule *pRule,
 int AddTerminalToSelectSet(SelectSet *pSet, const char *pTerminal);
 int AddSetToSelectSet(SelectSet *pDesSet, const Set *pSrcSet);
 int RemoveVoidFromSelectSet(SelectSet *pSet);
-void GenSelectSetList(const Rule *pRuleHead, const VoidTable *pVoidTable,
-                      const SetList *pFirstSetList,
-                      const SetList *pFollowSetList,
-                      SelectSetList *pSelectSetList);
-void GenParsingTable(const Rule *pRuleHead,
-                     const SelectSetList *pProductionSetList,
-                     ParsingTable *pTable);
+SelectSetList *GenSelectSetList(const Rule *pRuleHead,
+                                const VoidTable *pVoidTable,
+                                const SetList *pFirstSetList,
+                                const SetList *pFollowSetList);
+ParsingTable *GenParsingTable(const Rule *pRuleHead,
+                              const SelectSetList *pProductionSetList);
 Production **FindProduction(const ParsingTable *pParsingTable,
                             const Rule *pRule, const char *Terminal);
 void PrintSelectSetList(const SelectSetList *pProductionSetList);

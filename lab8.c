@@ -24,28 +24,22 @@ int main(int argc, char *argv[]) {
     Rule *pRuleHead =
         InitRules(rule_table, sizeof(rule_table) / sizeof(struct RULE_ENTRY));
     PrintRule(pRuleHead);
-    VoidTable VoidTable;
-    GenVoidTable(pRuleHead, &VoidTable);
-    PrintVoidTable(&VoidTable);
-    SetList FirstSetList, FollowSetList;
-    FirstSetList.nSetCount = 0;
-    FollowSetList.nSetCount = 0;
-    GenFirstSetList(pRuleHead, &VoidTable, &FirstSetList);
-    PrintFirstSetList(&FirstSetList);
-    GenFollowSetList(pRuleHead, &VoidTable, &FirstSetList, &FollowSetList);
-    PrintFollowSetList(&FollowSetList);
-    SelectSetList SelectSetList;
-    SelectSetList.nSetCount = 0;
-    GenSelectSetList(pRuleHead, &VoidTable, &FirstSetList, &FollowSetList,
-                     &SelectSetList);
-    PrintSelectSetList(&SelectSetList);
-    ParsingTable ParsingTable;
-    GenParsingTable(pRuleHead, &SelectSetList, &ParsingTable);
-    PrintParsingTable(&ParsingTable);
+    VoidTable *pVoidTable = GenVoidTable(pRuleHead);
+    PrintVoidTable(pVoidTable);
+    SetList *pFirstSetList = GenFirstSetList(pRuleHead, pVoidTable),
+            *pFollowSetList =
+                GenFollowSetList(pRuleHead, pVoidTable, pFirstSetList);
+    PrintFirstSetList(pFirstSetList);
+    PrintFollowSetList(pFollowSetList);
+    SelectSetList *pSelectSetList =
+        GenSelectSetList(pRuleHead, pVoidTable, pFirstSetList, pFollowSetList);
+    PrintSelectSetList(pSelectSetList);
+    ParsingTable *pParsingTable = GenParsingTable(pRuleHead, pSelectSetList);
+    PrintParsingTable(pParsingTable);
 
     /**
      * @brief 调用 Parse 函数对文本进行自顶向下语法分析
      */
-    Parse(pRuleHead, &ParsingTable, "i+i*i#");
+    Parse(pRuleHead, pParsingTable, "i+i*i#");
     return 0;
 }

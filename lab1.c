@@ -19,6 +19,7 @@ const struct RULE_ENTRY rule_table[] = {
     {"D", {{{1, "a"}, {0, "S"}}, {{1, "c"}}}}};
 
 int main(int argc, char *argv[]) {
+
     /**
      * @brief 调用 InitRules 函数初始化文法
      */
@@ -33,13 +34,12 @@ int main(int argc, char *argv[]) {
     /**
      * @brief 调用 GenVoidTable 函数求文法的空表
      */
-    VoidTable VoidTable;
-    GenVoidTable(pRuleHead, &VoidTable);
+    VoidTable *pVoidTable = GenVoidTable(pRuleHead);
 
     /**
      * @brief 输出空表
      */
     printf("\nThe Void Table:\n");
-    PrintVoidTable(&VoidTable);
+    PrintVoidTable(pVoidTable);
     return 0;
 }

@@ -12,12 +12,15 @@
  * @param pVoidTable 空表的指针
  * @param pFirstSetList First 集的指针
  * @param pFollowSetList Follow 集的指针
- * @param pSelectSetList Select 集的指针
+ * @return SelectSetList* 生成的 Select 集的指针
  */
-void GenSelectSetList(const Rule *pRuleHead, const VoidTable *pVoidTable,
-                      const SetList *pFirstSetList,
-                      const SetList *pFollowSetList,
-                      SelectSetList *pSelectSetList) {
+SelectSetList *GenSelectSetList(const Rule *pRuleHead,
+                                const VoidTable *pVoidTable,
+                                const SetList *pFirstSetList,
+                                const SetList *pFollowSetList) {
+    SelectSetList *pSelectSetList = malloc(sizeof(SelectSetList));
+    pSelectSetList->nSetCount = 0;
+
     for (; pRuleHead != NULL; pRuleHead = pRuleHead->pNextRule) {
         for (Production *pProduction = pRuleHead->pFirstProduction;
              pProduction != NULL; pProduction = pProduction->pNextProduction) {
@@ -62,11 +65,12 @@ void GenSelectSetList(const Rule *pRuleHead, const VoidTable *pVoidTable,
  *
  * @param pRuleHead 文法链表的头指针
  * @param pSelectSetList Select 集的指针
- * @param pParsingTable 预测分析标的指针
+ * @return ParsingTable* 生成的预测分析表的指针
  */
-void GenParsingTable(const Rule *pRuleHead, const SelectSetList *pSelectSetList,
-                     ParsingTable *pParsingTable) {
-    memset(pParsingTable, 0, sizeof(ParsingTable));
+ParsingTable *GenParsingTable(const Rule *pRuleHead,
+                              const SelectSetList *pSelectSetList) {
+    ParsingTable *pParsingTable = calloc(1, sizeof(ParsingTable));
+
     pParsingTable->pTableHead = GetTerminals(pRuleHead);
     for (pParsingTable->ColCount = 0;
          pParsingTable->pTableHead[++pParsingTable->ColCount];)
@@ -86,6 +90,7 @@ void GenParsingTable(const Rule *pRuleHead, const SelectSetList *pSelectSetList,
             }
         }
     }
+    return pParsingTable;
 }
 
 /**

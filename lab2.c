@@ -24,20 +24,17 @@ int main(int argc, char *argv[]) {
     Rule *pRuleHead =
         InitRules(rule_table, sizeof(rule_table) / sizeof(struct RULE_ENTRY));
     PrintRule(pRuleHead);
-    VoidTable VoidTable;
-    GenVoidTable(pRuleHead, &VoidTable);
-    PrintVoidTable(&VoidTable);
+    VoidTable *pVoidTable = GenVoidTable(pRuleHead);
+    PrintVoidTable(pVoidTable);
 
     /**
      * @brief 调用 GenFirstSetList 函数求文法的 First 集合
      */
-    SetList FirstSetList;
-    FirstSetList.nSetCount = 0;
-    GenFirstSetList(pRuleHead, &VoidTable, &FirstSetList);
+    SetList *pFirstSetList = GenFirstSetList(pRuleHead, pVoidTable);
 
     /**
      * @brief 输出 First 集
      */
-    PrintFirstSetList(&FirstSetList);
+    PrintFirstSetList(pFirstSetList);
     return 0;
 }

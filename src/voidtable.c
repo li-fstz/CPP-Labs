@@ -96,9 +96,10 @@ void MarkVoidAndNotVoid(Rule **pCopiedRulePrePtr, VoidTable *pVoidTable) {
  * @brief 生成文法的空表
  *
  * @param pRuleHead 文法链表的头指针
- * @param pVoidTable 空表的指针
+ * @return VoidTable* 生成的空表的指针
  */
-void GenVoidTable(const Rule *pRuleHead, VoidTable *pVoidTable) {
+VoidTable *GenVoidTable(const Rule *pRuleHead) {
+    VoidTable *pVoidTable = malloc(sizeof(VoidTable));
     pVoidTable->pTableHead = GetNonTerminals(pRuleHead);
     for (pVoidTable->ColCount = 0; pVoidTable->pTableHead[pVoidTable->ColCount];
          pVoidTable->ColCount++) {

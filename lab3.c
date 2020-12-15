@@ -22,23 +22,20 @@ int main(int argc, char *argv[]) {
     Rule *pRuleHead =
         InitRules(rule_table, sizeof(rule_table) / sizeof(struct RULE_ENTRY));
     PrintRule(pRuleHead);
-    VoidTable VoidTable;
-    GenVoidTable(pRuleHead, &VoidTable);
-    PrintVoidTable(&VoidTable);
-    SetList FirstSetList, FollowSetList;
-    FirstSetList.nSetCount = 0;
-    FollowSetList.nSetCount = 0;
-    GenFirstSetList(pRuleHead, &VoidTable, &FirstSetList);
-    PrintFirstSetList(&FirstSetList);
+    VoidTable *pVoidTable = GenVoidTable(pRuleHead);
+    PrintVoidTable(pVoidTable);
+    SetList *pFirstSetList = GenFirstSetList(pRuleHead, pVoidTable);
+    PrintFirstSetList(pFirstSetList);
 
     /**
      * @brief 调用 GenFollowSetList 函数求文法的 Follow 集合
      */
-    GenFollowSetList(pRuleHead, &VoidTable, &FirstSetList, &FollowSetList);
+    SetList *pFollowSetList =
+        GenFollowSetList(pRuleHead, pVoidTable, pFirstSetList);
 
     /**
      * @brief 输出 Follow 集
      */
-    PrintFollowSetList(&FollowSetList);
+    PrintFollowSetList(pFollowSetList);
     return 0;
 }

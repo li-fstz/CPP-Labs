@@ -32,10 +32,12 @@ void PrintFirstSetList(const SetList *pFirstSetList) {
  *
  * @param pRuleHead 文法链表的头指针
  * @param pVoidTable 空表的指针
- * @param pFirstSetList First 集的指针
+ * @return SetList* 生成的 First 集的指针
  */
-void GenFirstSetList(const Rule *pRuleHead, const VoidTable *pVoidTable,
-                     SetList *pFirstSetList) {
+SetList *GenFirstSetList(const Rule *pRuleHead, const VoidTable *pVoidTable) {
+    SetList *pFirstSetList = malloc(sizeof(SetList));
+    pFirstSetList->nSetCount = 0;
+
     const Rule *pRule;
     const Production *pProduction;
     const Symbol *pSymbol;
@@ -103,6 +105,7 @@ void GenFirstSetList(const Rule *pRuleHead, const VoidTable *pVoidTable,
             }
         }
     } while (isChange);
+    return pFirstSetList;
 }
 
 /**

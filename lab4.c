@@ -23,39 +23,33 @@ int main(int argc, char *argv[]) {
     Rule *pRuleHead =
         InitRules(rule_table, sizeof(rule_table) / sizeof(struct RULE_ENTRY));
     PrintRule(pRuleHead);
-    VoidTable VoidTable;
-    GenVoidTable(pRuleHead, &VoidTable);
-    PrintVoidTable(&VoidTable);
-    SetList FirstSetList, FollowSetList;
-    FirstSetList.nSetCount = 0;
-    FollowSetList.nSetCount = 0;
-    GenFirstSetList(pRuleHead, &VoidTable, &FirstSetList);
-    PrintFirstSetList(&FirstSetList);
-    GenFollowSetList(pRuleHead, &VoidTable, &FirstSetList, &FollowSetList);
-    PrintFollowSetList(&FollowSetList);
-    SelectSetList SelectSetList;
-    SelectSetList.nSetCount = 0;
+    VoidTable *pVoidTable = GenVoidTable(pRuleHead);
+    PrintVoidTable(pVoidTable);
+    SetList *pFirstSetList = GenFirstSetList(pRuleHead, pVoidTable),
+            *pFollowSetList =
+                GenFollowSetList(pRuleHead, pVoidTable, pFirstSetList);
+    PrintFirstSetList(pFirstSetList);
+    PrintFollowSetList(pFollowSetList);
 
     /**
      * @brief 调用 GenSelectSetList 求出文法的 Select 集
      */
-    GenSelectSetList(pRuleHead, &VoidTable, &FirstSetList, &FollowSetList,
-                     &SelectSetList);
+    SelectSetList *pSelectSetList =
+        GenSelectSetList(pRuleHead, pVoidTable, pFirstSetList, pFollowSetList);
 
     /**
      * @brief 输出 Select 集
      */
-    PrintSelectSetList(&SelectSetList);
-    ParsingTable ParsingTable;
+    PrintSelectSetList(pSelectSetList);
 
     /**
      * @brief 调用 GenParsingTable 求出文法的预测分析表
      */
-    GenParsingTable(pRuleHead, &SelectSetList, &ParsingTable);
+    ParsingTable *pParsingTable = GenParsingTable(pRuleHead, pSelectSetList);
 
     /**
      * @brief 输出预测分析表
      */
-    PrintParsingTable(&ParsingTable);
+    PrintParsingTable(pParsingTable);
     return 0;
 }
