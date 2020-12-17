@@ -58,6 +58,7 @@ SelectSetList *GenSelectSetList(const Rule *pRuleHead,
             }
         }
     }
+    return pSelectSetList;
 }
 
 /**
@@ -187,6 +188,7 @@ void AddOneSelectSet(SelectSetList *pSetList, const Rule *pRule,
             return;
         }
     }
+    pSetList->Sets[pSetList->nSetCount].nTerminalCount = 0;
     pSetList->Sets[pSetList->nSetCount].pRule = pRule;
     pSetList->Sets[pSetList->nSetCount++].pProduction = pProduction;
 }

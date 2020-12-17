@@ -120,6 +120,7 @@ void AddOneSet(SetList *pSetList, const char *pName) {
             return;
         }
     }
+    pSetList->Sets[pSetList->nSetCount].nTerminalCount = 0;
     strcpy(pSetList->Sets[pSetList->nSetCount++].Name, pName);
 }
 

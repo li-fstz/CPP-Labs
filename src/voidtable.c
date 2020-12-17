@@ -195,6 +195,7 @@ VoidTable *GenVoidTable(const Rule *pRuleHead) {
             }
         }
     } while (isChange);
+    return pVoidTable;
 }
 
 /**
