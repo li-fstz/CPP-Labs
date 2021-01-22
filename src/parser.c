@@ -8,38 +8,44 @@
 /**
  * @brief 将符号压入栈中
  *
- * @param pStack 栈的指针
- * @param pSymbol 符号指针
+ * @param stack 栈的指针
+ * @param symbol 符号指针
  */
-void PushSymbol(ParsingStack *pStack, const Symbol *pSymbol) {
-    pStack->Symbols[pStack->nSymbolCount++] = pSymbol;
+void PushSymbol(ParsingStack *stack, const Symbol *symbol) {
+    stack->symbols[stack->symbolCount++] = symbol;
 }
 
+void PushProductionSymbol(ParsingStack *stack, const Symbol *symbol) {
+    if (symbol == NULL) {
+        return;
+    }
+    PushProductionSymbol(stack, symbol->next);
+    if (strcmp(SYMBOLNAME(symbol), VOID_SYMBOL)) {
+        PushSymbol(stack, symbol);
+    }
+}
 /**
  * @brief 将产生式逆向压入栈中，在压栈时忽略 ε
  *
- * @param pStack 栈的指针
- * @param pProduction 产生式指针
+ * @param stack 栈的指针
+ * @param production 产生式指针
  */
-void PushProduction(ParsingStack *pStack, const Production *pProduction) {
-    if (pProduction == NULL) {
+void PushProduction(ParsingStack *stack, const Production *production) {
+    if (production == NULL) {
         return;
     }
-    PushProduction(pStack, pProduction->pNextSymbol);
-    if (strcmp(pProduction->SymbolName, VOID_SYMBOL)) {
-        PushSymbol(pStack, pProduction);
-    }
+    PushProductionSymbol(stack, SYMBOLHJEAD(production));
 }
 
 /**
  * @brief 将符号从栈中弹出
  *
- * @param pStack 栈的指针
+ * @param stack 栈的指针
  * @return Symbol* 符号的指针
  */
-const Symbol *PopSymbol(ParsingStack *pStack) {
-    if (pStack->nSymbolCount) {
-        return pStack->Symbols[--pStack->nSymbolCount];
+const Symbol *PopSymbol(ParsingStack *stack) {
+    if (stack->symbolCount) {
+        return stack->symbols[--stack->symbolCount];
     } else {
         return NULL;
     }
@@ -48,46 +54,42 @@ const Symbol *PopSymbol(ParsingStack *pStack) {
 /**
  * @brief 输出栈
  *
- * @param pStack 栈的指针
+ * @param stack 栈的指针
  */
-void PrintParsingStack(const ParsingStack *pStack) {
-    for (int i = 0; i < pStack->nSymbolCount; i++) {
-        printf(pStack->Symbols[i]->SymbolName);
+void PrintParsingStack(const ParsingStack *stack) {
+    for (int i = 0; i < stack->symbolCount; i++) {
+        printf(SYMBOLNAME(stack->symbols[i]));
     }
 }
 
 /**
  * @brief 执行自顶向下语法分析
  *
- * @param pRuleHead 文法链表的头指针
- * @param pParsingTable 预测分析表的指针
+ * @param ruleHead 文法链表的头指针
+ * @param parsingTable 预测分析表的指针
  * @param string 待解析文本
  */
-void Parse(const Rule *pRuleHead, const ParsingTable *pParsingTable,
+void Parse(const Rule *ruleHead, const ParsingTable *parsingTable,
            const char *string) {
     /**
      * @brief 初始化分析栈
      */
-    ParsingStack Stack;
-    Stack.nSymbolCount = 0;
+    ParsingStack stack;
+    stack.symbolCount = 0;
 
     /**
      * @brief 初始化开始符号和结束符号，
      * 并压入栈中
      */
-    Symbol *End = CreateSymbol(), *Start = CreateSymbol();
-    End->isToken = 1;
-    strcpy(End->SymbolName, END_SYMBOL);
-    PushSymbol(&Stack, End);
-    Start->isToken = 0;
-    strcpy(Start->SymbolName, pRuleHead->RuleName);
-    Start->pRule = pRuleHead;
-    PushSymbol(&Stack, Start);
+    Symbol *end = NewSymbol(END_SYMBOL), *start = NewSymbol(RULENAME(ruleHead));
+    PushSymbol(&stack, end);
+    RULE(start) = ruleHead;
+    PushSymbol(&stack, start);
 
     int i = 0;
-    while (Stack.nSymbolCount) {
+    while (stack.symbolCount) {
         printf("%d\t", ++i);
-        PrintParsingStack(&Stack);
+        PrintParsingStack(&stack);
         printf("\t%s\t", string);
 
         /**
@@ -96,10 +98,10 @@ void Parse(const Rule *pRuleHead, const ParsingTable *pParsingTable,
          * 如果是非终结符则从预测分析表中
          * 找到产生式逆向压入栈中。
          */
-        Symbol *pTopSymbol = PopSymbol(&Stack);
-        if (pTopSymbol->isToken) {
-            if (Stack.nSymbolCount) {
-                if (*pTopSymbol->SymbolName == *string) {
+        Symbol *topSymbol = PopSymbol(&stack);
+        if (ISTOKEN(topSymbol)) {
+            if (stack.symbolCount) {
+                if (*SYMBOLNAME(topSymbol) == *string) {
                     printf("“%c”匹配", *string);
                 } else {
                     printf("“%c”不匹配", *string);
@@ -115,11 +117,11 @@ void Parse(const Rule *pRuleHead, const ParsingTable *pParsingTable,
             }
         } else {
             char ch[] = {*string, '\0'};
-            Production *pProduction =
-                *FindProduction(pParsingTable, pTopSymbol->pRule, ch);
-            printf("%s->", pTopSymbol->SymbolName);
-            PrintProduction(pProduction);
-            PushProduction(&Stack, pProduction);
+            Production *production =
+                *FindProduction(parsingTable, RULE(topSymbol), ch);
+            printf("%s->", SYMBOLNAME(topSymbol));
+            PrintProduction(production);
+            PushProduction(&stack, production);
         }
         putchar('\n');
     }

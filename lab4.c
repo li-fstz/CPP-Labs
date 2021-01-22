@@ -12,7 +12,7 @@
  * T' -> *FT' | $
  * F -> i | (E)
  */
-const struct RULE_ENTRY rule_table[] = {
+const struct RULE_ENTRY ruleTable[] = {
     {"E", {{{0, "T"}, {0, "E'"}}}},
     {"E'", {{{1, "+"}, {0, "T"}, {0, "E'"}}, {{1, "$"}}}},
     {"T", {{{0, "F"}, {0, "T'"}}}},
@@ -20,36 +20,36 @@ const struct RULE_ENTRY rule_table[] = {
     {"F", {{{1, "i"}}, {{1, "("}, {0, "E"}, {1, ")"}}}}};
 
 int main(int argc, char *argv[]) {
-    Rule *pRuleHead =
-        InitRules(rule_table, sizeof(rule_table) / sizeof(struct RULE_ENTRY));
-    PrintRule(pRuleHead);
-    VoidTable *pVoidTable = GenVoidTable(pRuleHead);
-    PrintVoidTable(pVoidTable);
-    SetList *pFirstSetList = GenFirstSetList(pRuleHead, pVoidTable),
-            *pFollowSetList =
-                GenFollowSetList(pRuleHead, pVoidTable, pFirstSetList);
-    PrintFirstSetList(pFirstSetList);
-    PrintFollowSetList(pFollowSetList);
+    Rule *ruleHead =
+        InitRules(ruleTable, sizeof(ruleTable) / sizeof(struct RULE_ENTRY));
+    PrintRule(ruleHead);
+    VoidTable *voidTable = GenVoidTable(ruleHead);
+    PrintVoidTable(voidTable);
+    SetList *firstSetList = GenFirstSetList(ruleHead, voidTable),
+            *followSetList =
+                GenFollowSetList(ruleHead, voidTable, firstSetList);
+    PrintFirstSetList(firstSetList);
+    PrintFollowSetList(followSetList);
 
     /**
      * @brief 调用 GenSelectSetList 求出文法的 Select 集
      */
-    SelectSetList *pSelectSetList =
-        GenSelectSetList(pRuleHead, pVoidTable, pFirstSetList, pFollowSetList);
+    SelectSetList *selectSetList =
+        GenSelectSetList(ruleHead, voidTable, firstSetList, followSetList);
 
     /**
      * @brief 输出 Select 集
      */
-    PrintSelectSetList(pSelectSetList);
+    PrintSelectSetList(selectSetList);
 
     /**
      * @brief 调用 GenParsingTable 求出文法的预测分析表
      */
-    ParsingTable *pParsingTable = GenParsingTable(pRuleHead, pSelectSetList);
+    ParsingTable *parsingTable = GenParsingTable(ruleHead, selectSetList);
 
     /**
      * @brief 输出预测分析表
      */
-    PrintParsingTable(pParsingTable);
+    PrintParsingTable(parsingTable);
     return 0;
 }

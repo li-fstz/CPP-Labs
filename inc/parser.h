@@ -3,14 +3,14 @@
 #include "parsingtable.h"
 #include "rule.h"
 typedef struct {
-    Symbol *Symbols[32]; // 栈空间
-    int nSymbolCount;    // 栈内元素数量
+    Symbol *symbols[32]; // 栈空间
+    int symbolCount;    // 栈内元素数量
 } ParsingStack;
 
-void PushSymbol(ParsingStack *pStack, const Symbol *pSymbol);
-void PushProduction(ParsingStack *pStack, const Production *pProduction);
-const Symbol *PopSymbol(ParsingStack *pStack);
-void Parse(const Rule *pRuleHead, const ParsingTable *pParsingTable,
+void PushSymbol(ParsingStack *stack, const Symbol *symbol);
+void PushProduction(ParsingStack *stack, const Production *production);
+const Symbol *PopSymbol(ParsingStack *stack);
+void Parse(const Rule *ruleHead, const ParsingTable *parsingTable,
            const char *string);
-void PrintParsingStack(const ParsingStack *pStack);
+void PrintParsingStack(const ParsingStack *stack);
 #endif

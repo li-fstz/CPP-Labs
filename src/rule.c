@@ -7,162 +7,169 @@
 /**
  * @brief 初始化文法链表
  *
- * @param rule_table 原始文法实体的指针
- * @param nRuleCount 文法的数量
+ * @param ruleTable 原始文法实体的指针
+ * @param ruleCount 文法的数量
  * @return Rule* 文法链表的头指针
  */
-Rule *InitRules(const struct RULE_ENTRY *rule_table, int nRuleCount) {
-    Rule *pRuleHead, *pRule;
-    Symbol **pSymbolPtr1, **pSymbolPtr2;
-    int i, j, k;
-    Rule **pRulePtr = &pRuleHead;
-    for (i = 0; i < nRuleCount; i++) {
-        *pRulePtr = CreateRule(rule_table[i].RuleName);
-        pRulePtr = &(*pRulePtr)->pNextRule;
+Rule *InitRules(const struct RULE_ENTRY *ruleTable, int ruleCount) {
+    Rule *ruleHead = NULL;
+    for (int i = 0; i < ruleCount; i ++) {
+        ruleHead = NewRule(ruleTable[i].ruleName);
     }
-    pRule = pRuleHead;
-    for (i = 0; i < nRuleCount; i++) {
-        pSymbolPtr1 = &pRule->pFirstProduction;
-        for (j = 0; rule_table[i].Productions[j][0].Name[0] != '\0'; j++) {
-            pSymbolPtr2 = pSymbolPtr1;
-            for (k = 0; rule_table[i].Productions[j][k].Name[0] != '\0'; k++) {
-                const struct SYMBOL *pSymbol = &rule_table[i].Productions[j][k];
-                *pSymbolPtr2 = CreateSymbol();
-                (*pSymbolPtr2)->isToken = pSymbol->isToken;
-                strcpy((*pSymbolPtr2)->SymbolName, pSymbol->Name);
-                if (!pSymbol->isToken) {
-                    (*pSymbolPtr2)->pRule = FindRule(pRuleHead, pSymbol->Name);
-                    if (NULL == (*pSymbolPtr2)->pRule) {
-                        printf("Init rules error, miss rule \"%s\"\n",
-                               pSymbol->Name);
+    Rule *rule = ruleHead;
+    for (int i = 0; i < ruleCount; i ++) {
+        for (int j = 0; ruleTable[i].productions[j][0].symbolName[0]; j ++) {
+            Production *production = NewProduction();
+            PRODUCTIONHEAD(rule) = Append(PRODUCTIONHEAD(rule), production);
+            for (int k = 0; ruleTable[i].productions[j][k].symbolName[0]; k ++) {
+                Symbol *symbol = NewSymbol(ruleTable[i].productions[j][k].symbolName);
+                if (ruleTable[i].productions[j][k].isToken) {
+                    RULE(symbol) = FindRule(ruleHead, SYMBOLNAME(symbol));
+                    if (RULE(symbol) == NULL) {
+                        printf("Init rules error, miss rule \"%s\"\n", SYMBOLNAME(symbol));
                         exit(1);
                     }
                 }
-                pSymbolPtr2 = &(*pSymbolPtr2)->pNextSymbol;
+                SYMBOLHEAD(production) = Append(SYMBOLHEAD(production), symbol);
             }
-            pSymbolPtr1 = &(*pSymbolPtr1)->pNextProduction;
         }
-        pRule = pRule->pNextRule;
+        rule = rule->next;
     }
-    return pRuleHead;
+    return ruleHead;
 }
 
-/**
- * @brief 创建一个新的文法并初始化
- *
- * @param pRuleName 文法的名字
- * @return Rule* 新文法的指针
- */
-Rule *CreateRule(const char *pRuleName) {
-    Rule *pRule = (Rule *)malloc(sizeof(Rule));
-    strcpy(pRule->RuleName, pRuleName);
-    pRule->pFirstProduction = NULL;
-    pRule->pNextRule = NULL;
-    return pRule;
+Rule *NewRule(const char *ruleName) {
+    Rule *r = NewNode();
+    RULENAME(r) = strdup (ruleName);
+    return r;
 }
-
-/**
- * @brief 创建一个新符号并初始化
- *
- * @return 新符号的指针
- */
-Symbol *CreateSymbol() {
-    Symbol *pSymbol = (Symbol *)malloc(sizeof(Symbol));
-    pSymbol->pNextSymbol = NULL;
-    pSymbol->pNextProduction = NULL;
-    pSymbol->isToken = -1;
-    pSymbol->SymbolName[0] = '\0';
-    pSymbol->pRule = NULL;
-    return pSymbol;
+Symbol *NewSymbol(const char *symbolName) {
+    Symbol *r = NewNode();
+    SYMBOLNAME(r) = strdup (symbolName);
+    return r;
+}
+Production *NewProduction() {
+    return NewNode();
 }
 
 /**
  * @brief 从文法链表中使用名字查找文法
  *
- * @param pRuleHead 文法链表的头指针
- * @param RuleName 文法的名字
+ * @param ruleHead 文法链表的头指针
+ * @param ruleName 文法的名字
  * @return Rule* 如果存在该文法则返回文法的指针，否则返回 NULL
  */
-Rule *FindRule(const Rule *pRuleHead, const char *RuleName) {
-    Rule *pRule;
-    for (pRule = pRuleHead; pRule != NULL; pRule = pRule->pNextRule) {
-        if (0 == strcmp(pRule->RuleName, RuleName)) {
-            break;
+const Rule *FindRule(const Rule *ruleHead, const char *ruleName) {
+    for (; ruleHead != NULL; ruleHead = ruleHead->next) {
+        if (strcmp(RULENAME(ruleHead), ruleName) == 0) {
+            return ruleHead;
         }
     }
-    return pRule;
+    return NULL;
+
 }
 
 /**
  * @brief 输出文法
  *
- * @param pRuleHead 文法链表的头指针
+ * @param ruleHead 文法链表的头指针
  */
-void PrintRule(const Rule *pRuleHead) {
-    if (pRuleHead) {
-        printf("%s->", pRuleHead->RuleName);
-        for (Production *pProduction = pRuleHead->pFirstProduction;
-             pProduction != NULL; pProduction = pProduction->pNextProduction) {
-            for (Symbol *pSymble = pProduction; pSymble != NULL;
-                 pSymble = pSymble->pNextSymbol) {
-                printf("%s", pSymble->SymbolName);
+void PrintRule(const Rule *ruleHead) {
+    if (ruleHead) {
+        printf("%s->", RULENAME(ruleHead));
+        for (Production *production = PRODUCTIONHEAD(ruleHead);
+             production != NULL; production = production->next) {
+            for (Symbol *symbol = SYMBOLHEAD(production); symbol != NULL;
+                 symbol = symbol->next) {
+                printf("%s", SYMBOLNAME(symbol));
             }
-            putchar(pProduction->pNextProduction ? '|' : '\n');
+            putchar(production->next ? '|' : '\n');
         }
-        PrintRule(pRuleHead->pNextRule);
+        PrintRule(ruleHead->next);
     }
+}
+
+Rule *CopyRules(const Rule *ruleHeadTemplate) {
+    if (ruleHeadTemplate == NULL) {
+        return NULL;
+    }
+    Rule *rule = CopyRule(ruleHeadTemplate);
+    rule->next = CopyRules(ruleHeadTemplate->next);
+    return rule;
 }
 
 /**
  * @brief 复制整个文法链表
  *
- * @param pRuleHead 文法链表的头指针
+ * @param ruleHead 文法链表的头指针
  * @return Rule* 新文法链表的头指针
  */
-Rule *CopyRule(const Rule *pRuleHead) {
-    if (pRuleHead == NULL) {
+Rule *CopyRule(const Rule *ruleTemplate) {
+    if (ruleTemplate == NULL) {
         return NULL;
     }
-    Rule *pCopiedHead = CreateRule(pRuleHead->RuleName);
-    if (pRuleHead->pFirstProduction != NULL) {
-        for (Production *
-                 pProduction = pRuleHead->pFirstProduction,
-                **pProductionPrePtr = &pCopiedHead->pFirstProduction;
-             pProduction != NULL; pProduction = pProduction->pNextProduction,
-                pProductionPrePtr = &(*pProductionPrePtr)->pNextProduction) {
-            *pProductionPrePtr = CopyProduction(pProduction);
-        }
+    Rule *rule = NewRule(RULENAME(ruleTemplate));
+    for (Production *production = PRODUCTIONHEAD(ruleTemplate); production != NULL; production = production->next) {
+        PRODUCTIONHEAD(rule) = Append (PRODUCTIONHEAD(rule), CopyProduction(production));
     }
-    pCopiedHead->pNextRule = CopyRule(pRuleHead->pNextRule);
-    return pCopiedHead;
+    return rule;
 }
 
 /**
  * @brief 复制一个符号
  *
- * @param pSymbolTemplate 被复制的符号的指针
+ * @param symbolTemplate 被复制的符号的指针
  * @return Symbol* 新符号的指针
  */
-Symbol *CopySymbol(const Symbol *pSymbolTemplate) {
-    if (pSymbolTemplate == NULL) {
+Symbol *CopySymbol(const Symbol *symbolTemplate) {
+    if (symbolTemplate == NULL) {
         return NULL;
     }
-    Symbol *pTmp = CreateSymbol();
-    memcpy(pTmp, pSymbolTemplate, sizeof(Symbol));
-    return pTmp;
+    Symbol *symbol = NowSymbol(SYMBOLNAME(symbolTemplate));
+    RULE(symbol) = RULE(symbolTemplate);
+    return symbol;
 }
 
 /**
  * @brief 复制一个产生式
  *
- * @param pProductionTemplate 被产生式的产生式指针
+ * @param productionTemplate 被产生式的产生式指针
  * @return Symbol* 新产生式的指针
  */
-Production *CopyProduction(const Production *pProductionTemplate) {
-    if (pProductionTemplate == NULL) {
+Production *CopyProduction(const Production *productionTemplate) {
+    if (productionTemplate == NULL) {
         return NULL;
     }
-    Symbol *pRuleHead = CopySymbol(pProductionTemplate);
-    pRuleHead->pNextSymbol = CopyProduction(pProductionTemplate->pNextSymbol);
-    return pRuleHead;
+    Production *production = NewProduction();
+    for(Symbol *symbol = SYMBOLHEAD(productionTemplate); symbol != NULL; symbol = symbol->next) {
+        SYMBOLHEAD(production) = Append(SYMBOLHEAD(production), CopySymbol(symbol));
+    }
+    return production;
+}
+
+LinkedNode *Delete(LinkedNode *head, LinkedNode *node) {
+    if (head == node) {
+        //free (node);
+        return head->next;
+    }
+    for (LinkedNode *p = head; p->next != NULL; p = p->next) {
+        if (p->next == node) {
+            p->next = node->next;
+            //free (node);
+            break;
+        }
+    }
+    return head;
+}
+LinkedNode *Append(LinkedNode *head, const LinkedNode *node) {
+    if (head == NULL) {
+        return node;
+    }
+    LinkedNode *p;
+    for (p = head; p->next != NULL; p = p->next);
+    p->next = node;
+    return head;
+}
+LinkedNode *NewNode() {
+    return calloc(1, sizeof (LinkedNode));
 }

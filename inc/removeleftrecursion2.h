@@ -6,11 +6,11 @@
 #include "rule.h"
 #include <stdio.h>
 
-int RuleHasLeftRecursion(const Rule *pRule);
-void AddSymbolToProduction(Production *pProduction, const Symbol *pNewSymbol);
-void AddProductionToRule(Rule *pRule, Production *pNewProduction);
-void FreeProduction(Production *pProduction);
-Production *ReplaceProduction(const Production *pProductionTemplate);
-void RemoveLeftRecursion(Rule *pRuleHead);
+int RuleHasLeftRecursion(const Rule *rule);
+void AddSymbolToProduction(Production *production, const Symbol *newSymbol);
+void AddProductionToRule(Rule *rule, Production *newProduction);
+void FreeProduction(Production *production);
+Production *ReplaceProduction(const Production *productionTemplate);
+void RemoveLeftRecursion(Rule *ruleHead);
 
 #endif

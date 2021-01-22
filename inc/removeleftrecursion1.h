@@ -6,8 +6,8 @@
 #include "rule.h"
 #include <stdio.h>
 
-void AddSymbolToProduction(Production *pProduction, Symbol *pNewSymbol);
-void AddProductionToRule(Rule *pRule, Production *pNewProduction);
-void RemoveLeftRecursion(Rule *pRuleHead);
+void AddSymbolToProduction(Production *production, Symbol *newSymbol);
+void AddProductionToRule(Rule *rule, Production *newProduction);
+void RemoveLeftRecursion(Rule *ruleHead);
 
 #endif

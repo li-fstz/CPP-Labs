@@ -9,23 +9,23 @@
  * @brief
  * A -> abC | abcD | abcE
  */
-const struct RULE_ENTRY rule_table[] = {
+const struct RULE_ENTRY ruleTable[] = {
     {"A",
      {{{1, "a"}, {1, "b"}, {1, "C"}},
       {{1, "a"}, {1, "b"}, {1, "c"}, {1, "D"}},
       {{1, "a"}, {1, "b"}, {1, "c"}, {1, "E"}}}}};
 
 int main(int argc, char *argv[]) {
-    Rule *pRuleHead =
-        InitRules(rule_table, sizeof(rule_table) / sizeof(struct RULE_ENTRY));
+    Rule *ruleHead =
+        InitRules(ruleTable, sizeof(ruleTable) / sizeof(struct RULE_ENTRY));
     printf("Before Pickup Left Factor:\n");
-    PrintRule(pRuleHead);
+    PrintRule(ruleHead);
 
     /**
      * @brief 调用 PickupLeftFactor 函数对文法提取左因子
      */
-    PickupLeftFactor(pRuleHead);
+    PickupLeftFactor(ruleHead);
     printf("\nAfter Pickup Left Factor:\n");
-    PrintRule(pRuleHead);
+    PrintRule(ruleHead);
     return 0;
 }

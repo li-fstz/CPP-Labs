@@ -11,7 +11,7 @@
  * C -> AD | b
  * D -> aS | c
  */
-const struct RULE_ENTRY rule_table[] = {
+const struct RULE_ENTRY ruleTable[] = {
     {"S", {{{0, "A"}, {0, "B"}}, {{1, "b"}, {0, "C"}}}},
     {"A", {{{1, "$"}}, {{1, "b"}}}},
     {"B", {{{1, "$"}}, {{1, "a"}, {0, "D"}}}},
@@ -23,23 +23,23 @@ int main(int argc, char *argv[]) {
     /**
      * @brief 调用 InitRules 函数初始化文法
      */
-    Rule *pRuleHead =
-        InitRules(rule_table, sizeof(rule_table) / sizeof(struct RULE_ENTRY));
+    Rule *ruleHead =
+        InitRules(ruleTable, sizeof(ruleTable) / sizeof(struct RULE_ENTRY));
 
     /**
      * @brief 输出文法
      */
-    PrintRule(pRuleHead);
+    PrintRule(ruleHead);
 
     /**
      * @brief 调用 GenVoidTable 函数求文法的空表
      */
-    VoidTable *pVoidTable = GenVoidTable(pRuleHead);
+    VoidTable *voidTable = GenVoidTable(ruleHead);
 
     /**
      * @brief 输出空表
      */
     printf("\nThe Void Table:\n");
-    PrintVoidTable(pVoidTable);
+    PrintVoidTable(voidTable);
     return 0;
 }

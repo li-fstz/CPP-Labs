@@ -4,40 +4,60 @@
 #define MAX_STR_LENGTH 64
 #define VOID_SYMBOL "$"
 
-typedef struct Rule Rule;
-typedef struct Symbol Symbol, Production;
+#define R(r) ((r)->rule)
+#define P(p) ((p)->production)
+#define S(s) ((s)->symbol)
+#define ISTOKEN(s) (S(s).rule == NULL)
+#define RULENAME(r) (R(r).ruleName)
+#define SYMBOLNAME(s) (S(s).symbolName)
+#define PRODUCTIONHEAD(r) (R(r).productionHead)
+#define SYMBOLHEAD(p) (P(p).symbolHead)
+#define RULE(s) (S(s).rule)
+
+typedef struct LinkedNode LinkedNode, Rule, Production, Symbol;
+
+struct LinkedNode {
+    union {
+        struct Rule rule;
+        struct Production production;
+        struct Symbol symbol;
+    };
+    LinkedNode *next;
+};
 
 struct Symbol {
-    Symbol *pNextSymbol;         // 指向下一个符号
-    Production *pNextProduction; // 指向下一个产生式
-    int isToken; // 是否为终结符。1 表示终结符，0 表示非终结符
-    char SymbolName[MAX_STR_LENGTH]; // 终结符和非终结符的名称
-    Rule *pRule; // 指向符号对应的文法。isToken 为 0 时这个域有效
+    char *symbolName;
+    Rule *rule;
+};
+
+struct Production {
+    Symbol *symbolHead;
 };
 
 struct Rule {
-    char RuleName[MAX_STR_LENGTH]; // 文法的名称
-    Production *pFirstProduction;  // 指向文法的第一个产生式
-    Rule *pNextRule;               // 指向下一条文法
-};
-
-struct SYMBOL {
-    int isToken;
-    char Name[MAX_STR_LENGTH];
+    char *ruleName;
+    Production *productionHead;
 };
 
 struct RULE_ENTRY {
-    char RuleName[MAX_STR_LENGTH];
-    struct SYMBOL Productions[64][64];
+    char ruleName[MAX_STR_LENGTH];
+    struct {
+        int isToken;
+        char symbolName[MAX_STR_LENGTH];
+    } productions[64][64];
 };
 
-Rule *InitRules(const struct RULE_ENTRY *rule_table, int nRuleCount);
-Rule *CreateRule(const char *pRuleName);
-Symbol *CreateSymbol();
-Rule *FindRule(const Rule *pRuleHead, const char *RuleName);
-void PrintRule(const Rule *pRuleHead);
-Symbol *CopySymbol(const Symbol *pSymbolTemplate);
-Production *CopyProduction(const Production *pProductionTemplate);
-Rule *CopyRule(const Rule *pRuleHead);
+Rule *InitRules(const struct RULE_ENTRY *ruleTable, int ruleCount);
+Rule *NewRule(const char *ruleName);
+Symbol *NewSymbol(const char *symbolName);
+Production *NewProduction();
+const Rule *FindRule(const Rule *ruleHead, const char *ruleName);
+void PrintRule(const Rule *ruleHead);
+Symbol *CopySymbol(const Symbol *symbolTemplate);
+Production *CopyProduction(const Production *productionTemplate);
+Rule *CopyRule(const Rule *ruleHead);
 
+LinkedNode *Delete(LinkedNode *head, LinkedNode *node);
+LinkedNode *Append(LinkedNode *head, const LinkedNode *node);
+LinkedNode *NewNode();
 #endif

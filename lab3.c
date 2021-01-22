@@ -11,7 +11,7 @@
  * T' -> *FT' | $
  * F -> i | (E)
  */
-const struct RULE_ENTRY rule_table[] = {
+const struct RULE_ENTRY ruleTable[] = {
     {"E", {{{0, "T"}, {0, "E'"}}}},
     {"E'", {{{1, "+"}, {0, "T"}, {0, "E'"}}, {{1, "$"}}}},
     {"T", {{{0, "F"}, {0, "T'"}}}},
@@ -19,23 +19,23 @@ const struct RULE_ENTRY rule_table[] = {
     {"F", {{{1, "i"}}, {{1, "("}, {0, "E"}, {1, ")"}}}}};
 
 int main(int argc, char *argv[]) {
-    Rule *pRuleHead =
-        InitRules(rule_table, sizeof(rule_table) / sizeof(struct RULE_ENTRY));
-    PrintRule(pRuleHead);
-    VoidTable *pVoidTable = GenVoidTable(pRuleHead);
-    PrintVoidTable(pVoidTable);
-    SetList *pFirstSetList = GenFirstSetList(pRuleHead, pVoidTable);
-    PrintFirstSetList(pFirstSetList);
+    Rule *ruleHead =
+        InitRules(ruleTable, sizeof(ruleTable) / sizeof(struct RULE_ENTRY));
+    PrintRule(ruleHead);
+    VoidTable *voidTable = GenVoidTable(ruleHead);
+    PrintVoidTable(voidTable);
+    SetList *firstSetList = GenFirstSetList(ruleHead, voidTable);
+    PrintFirstSetList(firstSetList);
 
     /**
      * @brief 调用 GenFollowSetList 函数求文法的 Follow 集合
      */
-    SetList *pFollowSetList =
-        GenFollowSetList(pRuleHead, pVoidTable, pFirstSetList);
+    SetList *followSetList =
+        GenFollowSetList(ruleHead, voidTable, firstSetList);
 
     /**
      * @brief 输出 Follow 集
      */
-    PrintFollowSetList(pFollowSetList);
+    PrintFollowSetList(followSetList);
     return 0;
 }

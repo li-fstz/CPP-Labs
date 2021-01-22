@@ -8,20 +8,20 @@
  * A -> Ba | Aa | c
  * B -> Bb | Ab | d
  */
-const struct RULE_ENTRY rule_table[] = {
+const struct RULE_ENTRY ruleTable[] = {
     {"A", {{{0, "B"}, {1, "a"}}, {{0, "A"}, {1, "a"}}, {{1, "c"}}}},
     {"B", {{{0, "B"}, {1, "b"}}, {{0, "A"}, {1, "b"}}, {{1, "d"}}}}};
 int main(int argc, char *argv[]) {
-    Rule *pRuleHead =
-        InitRules(rule_table, sizeof(rule_table) / sizeof(struct RULE_ENTRY));
+    Rule *ruleHead =
+        InitRules(ruleTable, sizeof(ruleTable) / sizeof(struct RULE_ENTRY));
     printf("Before Remove Left Recursion:\n");
-    PrintRule(pRuleHead);
+    PrintRule(ruleHead);
 
     /**
      * @brief 调用 RemoveLeftRecursion 函数对文法消除左递归
      */
-    RemoveLeftRecursion(pRuleHead);
+    RemoveLeftRecursion(ruleHead);
     printf("\nAfter Remove Left Recursion:\n");
-    PrintRule(pRuleHead);
+    PrintRule(ruleHead);
     return 0;
 }
