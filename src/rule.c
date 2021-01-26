@@ -12,25 +12,26 @@
  * @return Rule* 文法链表的头指针
  */
 Rule *InitRules(const struct RULE_ENTRY *ruleTable, int ruleCount) {
+    assert(ruleTable && ruleCount);
     Rule *ruleHead = NULL;
     for (int i = 0; i < ruleCount; i ++) {
-        ruleHead = NewRule(ruleTable[i].ruleName);
+        ruleHead = AppendNode(ruleHead, NewRule(ruleTable[i].ruleName));
     }
     Rule *rule = ruleHead;
     for (int i = 0; i < ruleCount; i ++) {
         for (int j = 0; ruleTable[i].productions[j][0].symbolName[0]; j ++) {
             Production *production = NewProduction();
-            PRODUCTIONHEAD(rule) = Append(PRODUCTIONHEAD(rule), production);
+            PRODUCTION_HEAD(rule) = AppendNode(PRODUCTION_HEAD(rule), production);
             for (int k = 0; ruleTable[i].productions[j][k].symbolName[0]; k ++) {
                 Symbol *symbol = NewSymbol(ruleTable[i].productions[j][k].symbolName);
-                if (ruleTable[i].productions[j][k].isToken) {
-                    RULE(symbol) = FindRule(ruleHead, SYMBOLNAME(symbol));
+                if (!ruleTable[i].productions[j][k].isToken) {
+                    RULE(symbol) = FindRule(ruleHead, SYMBOL_NAME(symbol));
                     if (RULE(symbol) == NULL) {
-                        printf("Init rules error, miss rule \"%s\"\n", SYMBOLNAME(symbol));
+                        printf("Init rules error, miss rule \"%s\"\n", SYMBOL_NAME(symbol));
                         exit(1);
                     }
                 }
-                SYMBOLHEAD(production) = Append(SYMBOLHEAD(production), symbol);
+                SYMBOL_HEAD(production) = AppendNode(SYMBOL_HEAD(production), symbol);
             }
         }
         rule = rule->next;
@@ -39,17 +40,23 @@ Rule *InitRules(const struct RULE_ENTRY *ruleTable, int ruleCount) {
 }
 
 Rule *NewRule(const char *ruleName) {
-    Rule *r = NewNode();
-    RULENAME(r) = strdup (ruleName);
+    assert(ruleName);
+    Rule *r = NewNode(RuleNode);
+    r->value = calloc (1, sizeof (struct Rule));
+    RULE_NAME(r) = strdup (ruleName);
     return r;
 }
 Symbol *NewSymbol(const char *symbolName) {
-    Symbol *r = NewNode();
-    SYMBOLNAME(r) = strdup (symbolName);
+    assert(symbolName);
+    Symbol *r = NewNode(SymbolNode);
+    r->value = calloc (1, sizeof (struct Symbol));
+    SYMBOL_NAME(r) = strdup (symbolName);
     return r;
 }
 Production *NewProduction() {
-    return NewNode();
+    Production *r = NewNode(ProductionNode);
+    r->value = calloc (1, sizeof (struct Production));
+    return r;
 }
 
 /**
@@ -60,8 +67,9 @@ Production *NewProduction() {
  * @return Rule* 如果存在该文法则返回文法的指针，否则返回 NULL
  */
 const Rule *FindRule(const Rule *ruleHead, const char *ruleName) {
+    assert(IS_RULE(ruleHead) && ruleName);
     for (; ruleHead != NULL; ruleHead = ruleHead->next) {
-        if (strcmp(RULENAME(ruleHead), ruleName) == 0) {
+        if (strcmp(RULE_NAME(ruleHead), ruleName) == 0) {
             return ruleHead;
         }
     }
@@ -75,13 +83,14 @@ const Rule *FindRule(const Rule *ruleHead, const char *ruleName) {
  * @param ruleHead 文法链表的头指针
  */
 void PrintRule(const Rule *ruleHead) {
+    assert(!ruleHead || IS_RULE(ruleHead));
     if (ruleHead) {
-        printf("%s->", RULENAME(ruleHead));
-        for (Production *production = PRODUCTIONHEAD(ruleHead);
+        printf("%s->", RULE_NAME(ruleHead));
+        for (Production *production = PRODUCTION_HEAD(ruleHead);
              production != NULL; production = production->next) {
-            for (Symbol *symbol = SYMBOLHEAD(production); symbol != NULL;
+            for (Symbol *symbol = SYMBOL_HEAD(production); symbol != NULL;
                  symbol = symbol->next) {
-                printf("%s", SYMBOLNAME(symbol));
+                printf("%s", SYMBOL_NAME(symbol));
             }
             putchar(production->next ? '|' : '\n');
         }
@@ -90,6 +99,7 @@ void PrintRule(const Rule *ruleHead) {
 }
 
 Rule *CopyRules(const Rule *ruleHeadTemplate) {
+    assert(!ruleHeadTemplate || IS_RULE(ruleHeadTemplate));
     if (ruleHeadTemplate == NULL) {
         return NULL;
     }
@@ -105,13 +115,9 @@ Rule *CopyRules(const Rule *ruleHeadTemplate) {
  * @return Rule* 新文法链表的头指针
  */
 Rule *CopyRule(const Rule *ruleTemplate) {
-    if (ruleTemplate == NULL) {
-        return NULL;
-    }
-    Rule *rule = NewRule(RULENAME(ruleTemplate));
-    for (Production *production = PRODUCTIONHEAD(ruleTemplate); production != NULL; production = production->next) {
-        PRODUCTIONHEAD(rule) = Append (PRODUCTIONHEAD(rule), CopyProduction(production));
-    }
+    assert(IS_RULE(ruleTemplate));
+    Rule *rule = NewRule(RULE_NAME(ruleTemplate));
+    PRODUCTION_HEAD(rule) = CopyProductions(PRODUCTION_HEAD(ruleTemplate));
     return rule;
 }
 
@@ -122,10 +128,8 @@ Rule *CopyRule(const Rule *ruleTemplate) {
  * @return Symbol* 新符号的指针
  */
 Symbol *CopySymbol(const Symbol *symbolTemplate) {
-    if (symbolTemplate == NULL) {
-        return NULL;
-    }
-    Symbol *symbol = NowSymbol(SYMBOLNAME(symbolTemplate));
+    assert(IS_SYMBOL(symbolTemplate));
+    Symbol *symbol = NewSymbol(SYMBOL_NAME(symbolTemplate));
     RULE(symbol) = RULE(symbolTemplate);
     return symbol;
 }
@@ -137,21 +141,31 @@ Symbol *CopySymbol(const Symbol *symbolTemplate) {
  * @return Symbol* 新产生式的指针
  */
 Production *CopyProduction(const Production *productionTemplate) {
-    if (productionTemplate == NULL) {
-        return NULL;
-    }
+    assert(IS_PRODUCTION(productionTemplate));
     Production *production = NewProduction();
-    for(Symbol *symbol = SYMBOLHEAD(productionTemplate); symbol != NULL; symbol = symbol->next) {
-        SYMBOLHEAD(production) = Append(SYMBOLHEAD(production), CopySymbol(symbol));
+    for(Symbol *symbol = SYMBOL_HEAD(productionTemplate); symbol != NULL; symbol = symbol->next) {
+        SYMBOL_HEAD(production) = AppendNode(SYMBOL_HEAD(production), CopySymbol(symbol));
     }
     return production;
 }
 
-LinkedNode *Delete(LinkedNode *head, LinkedNode *node) {
+Production *CopyProductions(const Production *productionTemplate) {
+    if (productionTemplate == NULL) {
+        return NULL;
+    }
+    assert(IS_PRODUCTION(productionTemplate));
+    Production *production = CopyProduction(productionTemplate);
+    production->next = CopyProductions(productionTemplate->next);
+    return production;
+}
+
+LinkedNode *DeleteNode(LinkedNode *head, LinkedNode *node) {
+    assert(node);
     if (head == node) {
         //free (node);
         return head->next;
     }
+    assert(head->type == node->type);
     for (LinkedNode *p = head; p->next != NULL; p = p->next) {
         if (p->next == node) {
             p->next = node->next;
@@ -161,15 +175,38 @@ LinkedNode *Delete(LinkedNode *head, LinkedNode *node) {
     }
     return head;
 }
-LinkedNode *Append(LinkedNode *head, const LinkedNode *node) {
-    if (head == NULL) {
+LinkedNode *AppendNode(LinkedNode *head, const LinkedNode *node) {
+    if (head == NULL || node == NULL) {
         return node;
     }
+    assert(head->type == node->type);
     LinkedNode *p;
     for (p = head; p->next != NULL; p = p->next);
     p->next = node;
     return head;
 }
-LinkedNode *NewNode() {
-    return calloc(1, sizeof (LinkedNode));
+LinkedNode *InsertNode(LinkedNode *head, const LinkedNode *destNode, LinkedNode *node) {
+    assert(head && node);
+    assert(head->type == node->type);
+    if (head == destNode) {
+        node->next = head;
+        return node;
+    }
+    if (destNode == NULL) {
+        return AppendNode(head, node);
+    }
+    for (LinkedNode *p = head; p->next; p = p->next) {
+        if (p->next == destNode) {
+            AppendNode(node, destNode);
+            p->next = node;
+            return head;
+        }
+    }
+    assert(0);
+    return head;
+}
+LinkedNode *NewNode(NodeType type) {
+    LinkedNode *r = calloc(1, sizeof (LinkedNode));
+    r->type = type;
+    return r;
 }

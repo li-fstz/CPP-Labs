@@ -5,20 +5,20 @@
  *        如果这个符号是非终结符且指向的文法在当前文法之前，
  *        那么该终结符应该被替换
  *
- * @param pCurRule 文法的指针
+ * @param rule 文法的指针
  * @param symbol 符号的指针
  * @return int 是否需要被替换
  */
-int SymbolNeedReplace(const Rule *pCurRule, const Symbol *symbol) {
-    if (ISTOKEN(symbol)) {
+int SymbolNeedReplace(const Rule *rule, const Symbol *symbol) {
+    if (IS_TOKEN(symbol)) {
         return 0;
     } else {
-        Rule *pTmp = symbol->rule->next;
-        while (pTmp) {
-            if (pCurRule == pTmp) {
+        Rule *tmp = RULE(symbol)->next;
+        while (tmp) {
+            if (rule == tmp) {
                 return 1;
             } else {
-                pTmp = pTmp->next;
+                tmp = tmp->next;
             }
         }
         return 0;
@@ -34,23 +34,15 @@ int SymbolNeedReplace(const Rule *pCurRule, const Symbol *symbol) {
  *                 所以返回的新产生是也可能是一个链表
  */
 Production *ReplaceProduction(const Production *productionTemplate) {
-    Production *pProductionsOfFirstSymble =
-                   CopyProduction(productionTemplate->PRODUCTIONHEAD(rule)),
-               *pTmpProduction = pProductionsOfFirstSymble;
-    while (pTmpProduction) {
-        Symbol *pTmpSymble = pTmpProduction;
-        while (pTmpSymble->next) {
-            pTmpSymble = pTmpSymble->next;
-        }
-        pTmpSymble->next =
-            CopyProduction(productionTemplate->next);
-        if (pTmpProduction->next) {
-            pTmpProduction->next =
-                CopyProduction(pTmpProduction->next);
-        }
-        pTmpProduction = pTmpProduction->next;
+    Production *productionsOfFirstSymble =
+                   CopyProductions(PRODUCTION_HEAD(RULE(SYMBOL_HEAD(productionTemplate)))),
+               *tmpProduction = productionsOfFirstSymble;
+    while (tmpProduction) {
+        //leak
+        AppendNode(SYMBOL_HEAD(tmpProduction), SYMBOL_HEAD(CopyProduction(productionTemplate))->next);
+        tmpProduction = tmpProduction->next;
     }
-    return pProductionsOfFirstSymble;
+    return productionsOfFirstSymble;
 }
 
 /**
@@ -74,10 +66,10 @@ void FreeProduction(Production *production) {
  * @return int 是否存在左递归
  */
 int ProductionHasLeftRecursion(Production *production, Rule *rule) {
-    if (production->isToken) {
+    if (IS_TOKEN(SYMBOL_HEAD(production))) {
         return 0;
     } else {
-        return production->rule == rule;
+        return RULE(SYMBOL_HEAD(production)) == rule;
     }
 }
 
@@ -88,27 +80,14 @@ int ProductionHasLeftRecursion(Production *production, Rule *rule) {
  * @return int  是否存在左递归
  */
 int RuleHasLeftRecursion(const Rule *rule) {
-    Production *pTmp = PRODUCTIONHEAD(rule);
-    while (pTmp) {
-        if (ProductionHasLeftRecursion(pTmp, rule)) {
+    Production *tmp = PRODUCTION_HEAD(rule);
+    while (tmp) {
+        if (ProductionHasLeftRecursion(tmp, rule)) {
             return 1;
         }
-        pTmp = pTmp->next;
+        tmp = tmp->next;
     }
     return 0;
-}
-
-/**
- * @brief 将一个符号添加到产生式尾部
- *
- * @param production 产生式的指针
- * @param newSymbol 符号的指针
- */
-void AddSymbolToProduction(Production *production, const Symbol *newSymbol) {
-    while (production->next) {
-        production = production->next;
-    }
-    production->next = newSymbol;
 }
 
 /**
@@ -118,21 +97,13 @@ void AddSymbolToProduction(Production *production, const Symbol *newSymbol) {
  * @param rule 文法的指针
  * @param newProduction 产生式的指针
  */
-void AddProductionToRule(Rule *rule, Production *newProduction) {
-    if (!newProduction) {
-        newProduction = CreateSymbol();
-        newProduction->isToken = 1;
-        strcpy(newProduction->SymbolName, VOID_SYMBOL);
+void AddProductionToRule(Rule *rule, Production *production) {
+    if (!production) {
+        production = NewProduction();
+        Symbol *symbol = NewSymbol(VOID_SYMBOL);
+        SYMBOL_HEAD(production) = symbol;
     }
-    if (PRODUCTIONHEAD(rule)) {
-        Production *pTmp = PRODUCTIONHEAD(rule);
-        while (pTmp->next) {
-            pTmp = pTmp->next;
-        }
-        pTmp->next = newProduction;
-    } else {
-        PRODUCTIONHEAD(rule) = newProduction;
-    }
+    PRODUCTION_HEAD(rule) = AppendNode(PRODUCTION_HEAD(rule), production);
 }
 
 /**
@@ -143,7 +114,6 @@ void AddProductionToRule(Rule *rule, Production *newProduction) {
 void RemoveLeftRecursion(Rule *ruleHead) {
     Rule *rule, *newRule;
     Production *production;
-    Production **pProductionPrePtr;
 
     /**
      * @brief 标记文法是否被修改
@@ -157,31 +127,25 @@ void RemoveLeftRecursion(Rule *ruleHead) {
             /**
              * @brief 对当前文法对应的所有产生式进行替换
              */
-            for (production = PRODUCTIONHEAD(rule),
-                pProductionPrePtr = &PRODUCTIONHEAD(rule);
+            for (production = PRODUCTION_HEAD(rule);
                  production != NULL;
-                 pProductionPrePtr = &production->next,
                 production = production->next) {
                 /**
                  * @brief 判断当前产生式的第一个符号是否需要替换
                  * 如果这个符号对应的文法在当前文法的前面，则需要被替换
                  */
-                if (SymbolNeedReplace(rule, production)) {
+                if (SymbolNeedReplace(rule, SYMBOL_HEAD(production))) {
                     isChange = 1;
-                    Production *pNewProductions =
+                    Production *newProductions =
                         ReplaceProduction(production);
 
                     /**
                      * @brief 用替换后的产生式链表替换之前的产生式，
                      * 最后释放之前产生式的内存
                      */
-                    *pProductionPrePtr = pNewProductions;
-                    while (pNewProductions->next) {
-                        pNewProductions = pNewProductions->next;
-                    }
-                    pNewProductions->next =
-                        production->next;
-                    FreeProduction(production);
+                    PRODUCTION_HEAD(rule) = InsertNode(PRODUCTION_HEAD(rule), production, newProductions);
+                    PRODUCTION_HEAD(rule) = DeleteNode(PRODUCTION_HEAD(rule), production);
+                    //FreeProduction(production);
                     break;
                 }
                 if (isChange) {
@@ -200,35 +164,35 @@ void RemoveLeftRecursion(Rule *ruleHead) {
         /**
          * @brief 创建新文法
          */
-        newRule = NewRule(RULENAME(rule)); // 创建新 Rule
-        strcat(newRule->ruleName, POSTFIX);
+        char newName[MAX_STR_LENGTH];
+        strcpy (newName, RULE_NAME(rule));
+        strcat (newName, POSTFIX);
+        newRule = NewRule(newName);
 
-        production = PRODUCTIONHEAD(rule);
-        pProductionPrePtr = &PRODUCTIONHEAD(rule);
+        production = PRODUCTION_HEAD(rule);
         while (production != NULL) {
 
             /**
              * @brief 创建新文法的符号
              */
-            Symbol *pTmp = CreateSymbol();
-            pTmp->isToken = 0;
-            pTmp->rule = newRule;
-            strcpy(pTmp->SymbolName, newRule->ruleName);
+            Symbol *tmp = NewSymbol(newName);
+            RULE(tmp) = newRule;
 
             /**
              * @brief 如果当前产生式包含左递归，则移除此产生式，
              * 然后将此产生式的左递归转换为右递归，然后将其加入到新文法中；
              * 如果当前产生式不包含左递归，则在产生式尾部添加新文法的符号。
              */
-            if (0 == production->isToken && production->rule == rule) {
-                *pProductionPrePtr = (*pProductionPrePtr)->next;
-                production = production->next;
-                AddSymbolToProduction(production, pTmp);
+            if (!IS_TOKEN(SYMBOL_HEAD(production)) && RULE(SYMBOL_HEAD(production)) == rule) {
+                Production *next = production->next;
+                PRODUCTION_HEAD(rule) = DeleteNode(PRODUCTION_HEAD(rule), production);
+                production->next = NULL;
+                SYMBOL_HEAD(production) = SYMBOL_HEAD(production)->next;
+                AppendNode(SYMBOL_HEAD(production), tmp);
                 AddProductionToRule(newRule, production);
-                production = *pProductionPrePtr;
+                production = next;
             } else {
-                AddSymbolToProduction(production, pTmp);
-                pProductionPrePtr = &(*pProductionPrePtr)->next;
+                AppendNode(SYMBOL_HEAD(production), tmp);
                 production = production->next;
             }
         }
@@ -237,8 +201,7 @@ void RemoveLeftRecursion(Rule *ruleHead) {
          * @brief 向新文法添加 ε 产生式，然后将新文法加入到文法链表中
          */
         AddProductionToRule(newRule, NULL);
-        newRule->next = rule->next;
-        rule->next = newRule;
-        rule = newRule;
+        InsertNode(rule, rule->next, newRule);
+        rule = rule->next;
     }
 }

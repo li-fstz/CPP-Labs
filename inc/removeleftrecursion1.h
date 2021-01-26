@@ -6,7 +6,6 @@
 #include "rule.h"
 #include <stdio.h>
 
-void AddSymbolToProduction(Production *production, Symbol *newSymbol);
 void AddProductionToRule(Rule *rule, Production *newProduction);
 void RemoveLeftRecursion(Rule *ruleHead);
 

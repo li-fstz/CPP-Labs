@@ -25,10 +25,9 @@ int main(int argc, char *argv[]) {
     PrintRule(ruleHead);
     VoidTable *voidTable = GenVoidTable(ruleHead);
     PrintVoidTable(voidTable);
-    SetList *firstSetList = GenFirstSetList(ruleHead, voidTable),
-            *followSetList =
-                GenFollowSetList(ruleHead, voidTable, firstSetList);
+    FirstSetList *firstSetList = GenFirstSetList(ruleHead, voidTable);
     PrintFirstSetList(firstSetList);
+    FirstSetList *followSetList = GenFollowSetList(ruleHead, voidTable, firstSetList);
     PrintFollowSetList(followSetList);
 
     /**

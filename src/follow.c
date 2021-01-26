@@ -12,7 +12,7 @@
  *
  * @param set 子集指针
  */
-void RemoveVoidFromSet(Set *set) {
+int RemoveVoidFromSet(Set *set) {
     for (int i = 0; i < set->terminalCount; i++) {
         if (strcmp(set->terminals[i], VOID_SYMBOL) == 0) {
             if (i != set->terminalCount - 1) {
@@ -21,9 +21,11 @@ void RemoveVoidFromSet(Set *set) {
                             (set->terminalCount - i - 1));
             }
             set->terminalCount--;
-            return;
+            set->terminals = realloc(set->terminals, set->terminalCount * sizeof(char *));
+            return 1;
         }
     }
+    return 0;
 }
 
 /**
@@ -34,11 +36,11 @@ void RemoveVoidFromSet(Set *set) {
  * @param firstSetList Follow 集的指针
  * @return SetList* 生成 First 集的指针
  */
-SetList *GenFollowSetList(const Rule *ruleHead, const VoidTable *voidTable,
-                          const SetList *firstSetList) {
-    SetList *followSetList = malloc(sizeof(SetList));
-    followSetList->setCount = 0;
-
+FollowSetList *GenFollowSetList(const Rule *ruleHead, const VoidTable *voidTable,
+                          const FirstSetList *firstSetList) {
+    FollowSetList *followSetList = calloc(1, sizeof(SetList));
+    followSetList->type = FollowSet;
+    
     const Rule *rule;
     const Production *production;
     const Symbol *symbol;
@@ -53,25 +55,25 @@ SetList *GenFollowSetList(const Rule *ruleHead, const VoidTable *voidTable,
      * 在开始符号的 Follow 子集中加入结束符
      */
     for (rule = ruleHead; rule != NULL; rule = rule->next) {
-        AddOneSet(followSetList, RULENAME(rule));
+        AddOneSet(followSetList, strdup(RULE_NAME(rule)), strKeyCmp);
     }
     AddTerminalToSet(&followSetList->sets[0], END_SYMBOL);
 
     do {
         isChange = 0;
         for (rule = ruleHead; rule != NULL; rule = rule->next) {
-            for (production = PRODUCTIONHEAD(rule); production != NULL;
+            for (production = PRODUCTION_HEAD(rule); production != NULL;
                  production = production->next) {
-                for (symbol = SYMBOLHEAD(production); symbol != NULL;
+                for (symbol = SYMBOL_HEAD(production); symbol != NULL;
                      symbol = symbol->next) {
-                    if (ISTOKEN(symbol))
+                    if (IS_TOKEN(symbol))
                         continue; // 忽略终结符
 
                     /**
                      * @brief 初始化一个临时子集
                      */
                     Set tmpSet;
-                    tmpSet.terminalCount = 0;
+                    memset(&tmpSet, 0, sizeof(Set));
 
                     Symbol *tmpSymbol;
 
@@ -86,19 +88,19 @@ SetList *GenFollowSetList(const Rule *ruleHead, const VoidTable *voidTable,
                      */
                     for (tmpSymbol = symbol->next; tmpSymbol != NULL;
                          tmpSymbol = tmpSymbol->next) {
-                        if (ISTOKEN(tmpSymbol)) {
-                            if (strcmp(SYMBOLNAME(tmpSymbol), VOID_SYMBOL) !=
+                        if (IS_TOKEN(tmpSymbol)) {
+                            if (strcmp(SYMBOL_NAME(tmpSymbol), VOID_SYMBOL) !=
                                 0) {
                                 AddTerminalToSet(&tmpSet,
-                                                 SYMBOLNAME(tmpSymbol));
+                                                 SYMBOL_NAME(tmpSymbol));
                                 break;
                             }
                         } else {
                             AddSetToSet(
                                 &tmpSet,
-                                GetSet(firstSetList, SYMBOLNAME(tmpSymbol)));
+                                GetSet(firstSetList, SYMBOL_NAME(tmpSymbol), strKeyCmp));
                             if (!*FindHasVoid(voidTable,
-                                              SYMBOLNAME(tmpSymbol))) {
+                                              SYMBOL_NAME(tmpSymbol))) {
                                 break;
                             }
                         }
@@ -113,7 +115,7 @@ SetList *GenFollowSetList(const Rule *ruleHead, const VoidTable *voidTable,
                     /**
                      * @brief 目标 Follow 子集
                      */
-                    Set *desSet = GetSet(followSetList, SYMBOLNAME(symbol));
+                    Set *desSet = GetSet(followSetList, SYMBOL_NAME(symbol), strKeyCmp);
                     isChange = AddSetToSet(desSet, &tmpSet) || isChange;
 
                     /**
@@ -125,7 +127,7 @@ SetList *GenFollowSetList(const Rule *ruleHead, const VoidTable *voidTable,
                     if (tmpSymbol == NULL) {
                         isChange =
                             AddSetToSet(desSet, GetSet(followSetList,
-                                                        RULENAME(rule))) ||
+                                                        RULE_NAME(rule), strKeyCmp)) ||
                             isChange;
                     }
                 }
@@ -140,10 +142,10 @@ SetList *GenFollowSetList(const Rule *ruleHead, const VoidTable *voidTable,
  *
  * @param followSetList Follow 集指针
  */
-void PrintFollowSetList(const SetList *followSetList) {
+void PrintFollowSetList(const FollowSetList *followSetList) {
     printf("\nThe Follow Set:\n");
     for (int i = 0; i < followSetList->setCount; i++) {
-        printf("Follow(%s) = { ", followSetList->sets[i].name);
+        printf("Follow(%s) = { ", followSetList->sets[i].key);
         for (int j = 0; j < followSetList->sets[i].terminalCount; j++) {
             if (j == followSetList->sets[i].terminalCount - 1) {
                 printf("%s ", followSetList->sets[i].terminals[j]);

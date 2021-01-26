@@ -15,7 +15,7 @@
 void PrintFirstSetList(const SetList *firstSetList) {
     printf("\nThe First Set:\n");
     for (int i = 0; i < firstSetList->setCount; i++) {
-        printf("First(%s) = { ", firstSetList->sets[i].name);
+        printf("First(%s) = { ", firstSetList->sets[i].key);
         for (int j = 0; j < firstSetList->sets[i].terminalCount; j++) {
             if (j == firstSetList->sets[i].terminalCount - 1) {
                 printf("%s ", firstSetList->sets[i].terminals[j]);
@@ -27,6 +27,10 @@ void PrintFirstSetList(const SetList *firstSetList) {
     }
 }
 
+int strKeyCmp (const void *a, const void *b) {
+    return strcmp(a, b) == 0;
+}
+
 /**
  * @brief 生成文法的 First 集
  *
@@ -34,9 +38,9 @@ void PrintFirstSetList(const SetList *firstSetList) {
  * @param voidTable 空表的指针
  * @return SetList* 生成的 First 集的指针
  */
-SetList *GenFirstSetList(const Rule *ruleHead, const VoidTable *voidTable) {
-    SetList *firstSetList = malloc(sizeof(SetList));
-    firstSetList->setCount = 0;
+FirstSetList *GenFirstSetList(const Rule *ruleHead, const VoidTable *voidTable) {
+    FirstSetList *firstSetList = calloc(1, sizeof(SetList));
+    firstSetList->type = FirstSet;
 
     const Rule *rule;
     const Production *production;
@@ -52,8 +56,8 @@ SetList *GenFirstSetList(const Rule *ruleHead, const VoidTable *voidTable) {
      * 如果该文法可以推出 ε，则向 First 集中加 ε
      */
     for (rule = ruleHead; rule != NULL; rule = rule->next) {
-        AddOneSet(firstSetList, RULENAME(rule));
-        if (*FindHasVoid(voidTable, RULENAME(rule))) {
+        AddOneSet(firstSetList, strdup(RULE_NAME(rule)), strKeyCmp);
+        if (*FindHasVoid(voidTable, RULE_NAME(rule))) {
             AddTerminalToSet(firstSetList->sets + firstSetList->setCount - 1,
                              VOID_SYMBOL);
         }
@@ -66,10 +70,10 @@ SetList *GenFirstSetList(const Rule *ruleHead, const VoidTable *voidTable) {
             /**
              * @brief 该文法对应的 First 子集
              */
-            Set *desSet = GetSet(firstSetList, RULENAME(rule));
-            for (production = PRODUCTIONHEAD(rule); production != NULL;
+            Set *desSet = GetSet(firstSetList, RULE_NAME(rule), strKeyCmp);
+            for (production = PRODUCTION_HEAD(rule); production != NULL;
                  production = production->next) {
-                for (symbol = SYMBOLHEAD(production); symbol != NULL;
+                for (symbol = SYMBOL_HEAD(production); symbol != NULL;
                      symbol = symbol->next) {
 
                     /**
@@ -84,9 +88,9 @@ SetList *GenFirstSetList(const Rule *ruleHead, const VoidTable *voidTable) {
                      * 该文法 First 子集中，
                      * 如果非终结符对应的文法不能推出空,则结束对该产生式的查找。
                      */
-                    if (ISTOKEN(symbol)) {
+                    if (IS_TOKEN(symbol)) {
                         isChange =
-                            AddTerminalToSet(desSet, SYMBOLNAME(symbol)) ||
+                            AddTerminalToSet(desSet, SYMBOL_NAME(symbol)) ||
                             isChange;
                         break;
                     } else {
@@ -95,9 +99,9 @@ SetList *GenFirstSetList(const Rule *ruleHead, const VoidTable *voidTable) {
                          * @brief 非终结符对应的文法 First 子集
                          */
                         Set *srcSet =
-                            GetSet(firstSetList, SYMBOLNAME(symbol));
+                            GetSet(firstSetList, SYMBOL_NAME(symbol), strKeyCmp);
                         isChange = AddSetToSet(desSet, srcSet) || isChange;
-                        if (!*FindHasVoid(voidTable, srcSet->name)) {
+                        if (!*FindHasVoid(voidTable, srcSet->key)) {
                             break;
                         }
                     }
@@ -114,14 +118,16 @@ SetList *GenFirstSetList(const Rule *ruleHead, const VoidTable *voidTable) {
  * @param setList First 集或 Follow 集的指针
  * @param name 非终结符子集名字
  */
-void AddOneSet(SetList *setList, const char *name) {
+void AddOneSet(SetList *setList, const void *key, CmpFunc cmp) {
     for (int i = 0; i < setList->setCount; i++) {
-        if (strcmp(setList->sets[i].name, name) == 0) {
+        if (cmp(setList->sets[i].key, key)) {
             return;
         }
     }
+    setList->sets = realloc(setList->sets, (setList->setCount + 1) * sizeof (Set));
     setList->sets[setList->setCount].terminalCount = 0;
-    setList->sets[setList->setCount++].name = strdup (name);
+    setList->sets[setList->setCount].terminals = NULL;
+    setList->sets[setList->setCount++].key = key;
 }
 
 /**
@@ -131,9 +137,9 @@ void AddOneSet(SetList *setList, const char *name) {
  * @param name 非终结符子集名字
  * @return Set* 如果找到则返回子集的指针，否则返回 NULL
  */
-Set *GetSet(const SetList *setList, const char *name) {
+Set *GetSet(const SetList *setList, const void *key, CmpFunc cmp) {
     for (int i = 0; i < setList->setCount; i++) {
-        if (strcmp(setList->sets[i].name, name) == 0) {
+        if (cmp(setList->sets[i].key, key)) {
             return setList->sets + i;
         }
     }
@@ -153,6 +159,7 @@ int AddTerminalToSet(Set *set, const char *terminal) {
             return 0;
         }
     }
+    set->terminals = realloc (set->terminals, (set->terminalCount + 1) * sizeof (char *));
     set->terminals[set->terminalCount++] = strdup (terminal);
     return 1;
 }

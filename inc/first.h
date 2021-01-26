@@ -4,23 +4,35 @@
 #include "rule.h"
 #include "voidtable.h"
 #include <stdio.h>
+typedef enum SetType {
+    FirstSet,
+    FollowSet,
+    SelectSet
+} SetType;
 
 typedef struct {
-    char *name;          // 子集的名称
-    char *terminals[32]; // 终结符数组
+    void *key;
+    char **terminals; // 终结符数组
     int terminalCount;                 // 终结符个数
 } Set;
 
-typedef struct {
-    Set sets[32];  // 子集数组
+struct SetList {
+    Set *sets;  // 子集数组
     int setCount; // 子集个数
-} SetList;
+    SetType type;
+};
 
-SetList *GenFirstSetList(const Rule *ruleHead, const VoidTable *voidTable);
-Set *GetSet(const SetList *setList, const char *name);
-void AddOneSet(SetList *setList, const char *name);
+typedef struct SetList SetList, FirstSetList;
+
+
+typedef int (*CmpFunc)(const void *a, const void *b);
+
+int strKeyCmp (const void *a, const void *b);
+FirstSetList *GenFirstSetList(const Rule *ruleHead, const VoidTable *voidTable);
+Set *GetSet(const SetList *setList, const void *key, CmpFunc cmp);
+void AddOneSet(SetList *setList, const void *key, CmpFunc cmp);
 int AddTerminalToSet(Set *set, const char *terminal);
 int AddSetToSet(Set *desSet, const Set *srcSet);
-void PrintFirstSetList(const SetList *firstSetList);
+void PrintFirstSetList(const FirstSetList *firstSetList);
 
 #endif

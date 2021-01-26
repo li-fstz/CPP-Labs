@@ -3,7 +3,7 @@
 #include "parsingtable.h"
 #include "rule.h"
 typedef struct {
-    Symbol *symbols[32]; // 栈空间
+    Symbol **symbols; // 栈空间
     int symbolCount;    // 栈内元素数量
 } ParsingStack;
 

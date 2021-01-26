@@ -28,7 +28,7 @@ void PickupLeftFactor(Rule *ruleHead) {
              * 求出后续产生式的最长的左因子长度
              */
             int count = 0;
-            for (productionTemplate = PRODUCTIONHEAD(rule);
+            for (productionTemplate = PRODUCTION_HEAD(rule);
                  productionTemplate != NULL;
                  productionTemplate = productionTemplate->next) {
                 if ((count = LeftFactorMaxLength(productionTemplate)) > 0)
@@ -45,19 +45,21 @@ void PickupLeftFactor(Rule *ruleHead) {
             /**
              * @brief 创建一条以当前文法为名称模板的新文法
              */
-            newRule = NewRule(RULENAME(rule));
-            char *newName = GetUniqueRuleName(rule, RULENAME(newRule));
-            free (RULENAME(newRule));
-            RULENAME(newRule) = newName;
+            newRule = NewRule(RULE_NAME(rule));
+            char *newName = GetUniqueRuleName(rule, RULE_NAME(newRule));
+            free (RULE_NAME(newRule));
+            RULE_NAME(newRule) = newName;
             isChange = 1;
 
             /**
              * @brief 把模板产生式左因子之后的产生式加入到新文法中
              * 然后将其替换为新文法的符号
              */
-            AddProductionToRule(newRule,
-                                GetSymbol(productionTemplate, count));
-            Symbol *tmp = NewSymbol(RULENAME(newRule));
+            
+            Production *newProduction = NewProduction();
+            SYMBOL_HEAD(newProduction) = GetSymbol(productionTemplate, count);
+            AddProductionToRule(newRule, newProduction);
+            Symbol *tmp = NewSymbol(RULE_NAME(newRule));
             RULE(tmp) = newRule;
             GetSymbol(productionTemplate, count - 1)->next = tmp;
 
@@ -65,7 +67,6 @@ void PickupLeftFactor(Rule *ruleHead) {
              * @brief 在模板产生式之后查找包含左因子的产生式，然后提取左因子
              */
             production = productionTemplate->next;
-            Production **pProductionPtr = &productionTemplate->next;
             while (production != NULL) {
 
                 /**
@@ -73,14 +74,14 @@ void PickupLeftFactor(Rule *ruleHead) {
                  * 加入到新文法中，并将该产生式从文法中移除
                  */
                 if (NeedPickup(productionTemplate, count, production)) {
-                    AddProductionToRule(newRule,
-                                        GetSymbol(production, count));
-                    *pProductionPtr = production->next;
-                    GetSymbol(production, count - 1)->next = NULL;
-                    FreeProduction(production);
-                    production = *pProductionPtr;
+                    Production *newProduction = NewProduction();
+                    SYMBOL_HEAD(newProduction) = GetSymbol(production, count);
+                    AddProductionToRule(newRule, newProduction);
+                    Production *next = production->next;
+                    productionTemplate->next = DeleteNode(productionTemplate->next, production);
+                    production = next;
+                    //FreeProduction(production);
                 } else {
-                    pProductionPtr = &production->next;
                     production = production->next;
                 }
             }
@@ -106,7 +107,7 @@ void PickupLeftFactor(Rule *ruleHead) {
 Symbol *GetSymbol(Production *production, int index) {
     int i = 0;
     Symbol *symbol;
-    for (symbol = SYMBOLHEAD(production), i = 0; symbol != NULL;
+    for (symbol = SYMBOL_HEAD(production), i = 0; symbol != NULL;
          symbol = symbol->next, i++) {
         if (i == index) {
             return symbol;
@@ -123,36 +124,17 @@ Symbol *GetSymbol(Production *production, int index) {
  */
 int LeftFactorMaxLength(Production *production) {
     int maxLength = 0;
-    for (Production *pCmpProduction = production->next;
-         pCmpProduction != NULL;
-         pCmpProduction = pCmpProduction->next) {
+    for (Production *cmpProduction = production->next;
+         cmpProduction != NULL;
+         cmpProduction = cmpProduction->next) {
         int length = 0;
-        for (Symbol *pA = production, *pB = pCmpProduction;
-             !pA || !pB || !SymbolCmp(pA, pB);
-             length++, pA = pA->next, pB = pB->next) {
+        for (Symbol *a = SYMBOL_HEAD(production), *b = SYMBOL_HEAD(cmpProduction);
+             a && b && !strcmp(SYMBOL_NAME(a), SYMBOL_NAME(b));
+             length++, a = a->next, b = b->next) {
         }
         maxLength = length > maxLength ? length : maxLength;
     }
     return maxLength;
-}
-
-/**
- * @brief 比较 Symbol 是否相等
- *
- * @param symbol1 Symbol1 的指针
- * @param symbol2 Symbol2 的指针
- * @return int 是否相等
- */
-int SymbolCmp(const Symbol *symbol1, const Symbol *symbol2) {
-    if (ISTOKEN(symbol1) == ISTOKEN(symbol2)) {
-        if (ISTOKEN(symbol1)) {
-            return strcmp(SYMBOLNAME(symbol1), SYMBOLNAME(symbol2)) == 0;
-        } else {
-            return RULE(symbol1) == RULE(symbol2);
-        }
-    } else {
-        return 0;
-    }
 }
 
 /**
@@ -165,10 +147,10 @@ int SymbolCmp(const Symbol *symbol1, const Symbol *symbol2) {
  */
 int NeedPickup(const Production *productionTemplate, int count,
                const Production *production) {
-    Symbol *pA = productionTemplate, *pB = production;
+    Symbol *a = SYMBOL_HEAD(productionTemplate), *b = SYMBOL_HEAD(production);
     for (int i = 0; i < count;
-         i++, pA = pA->next, pB = pB->next) {
-        if (!pA || !pB || !SymbolCmp(pA, pB)) {
+         i++, a = a->next, b = b->next) {
+        if (!a || !b || strcmp(SYMBOL_NAME(a), SYMBOL_NAME(b))) {
             return 0;
         }
     }
@@ -185,9 +167,9 @@ void AddProductionToRule(Rule *rule, Production *production) {
     if (!production) {
         production = NewProduction();
         Symbol *symbol = NewSymbol(VOID_SYMBOL);
-        SYMBOLHEAD(production) = symbol;
+        SYMBOL_HEAD(production) = symbol;
     }
-    PRODUCTIONHEAD(rule) = Append(PRODUCTIONHEAD(rule), production);
+    PRODUCTION_HEAD(rule) = AppendNode(PRODUCTION_HEAD(rule), production);
 }
 
 /**
@@ -200,7 +182,7 @@ char *GetUniqueRuleName(const Rule *ruleHead, const char *ruleName) {
     char tmp[MAX_STR_LENGTH];
     strcpy(tmp, ruleName);
     for (Rule *rule = ruleHead; rule != NULL;) {
-        if (strcmp(RULENAME(rule), tmp) == 0) {
+        if (strcmp(RULE_NAME(rule), tmp) == 0) {
             strcat(tmp, POSTFIX);
             rule = ruleHead;
             continue;

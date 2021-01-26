@@ -4,45 +4,37 @@
 #include "first.h"
 #include "rule.h"
 
-typedef struct {
-    int colCount;      // 列宽
-    char **tableHead; // 表头
-    struct TableRows {
-        Rule *rule;                 // 行首的文法
-        Production *productions[32]; // 行内的产生式
-    } tableRows[32];                 // 行
-} ParsingTable;
+#define PARSINGTABLE_ROW(t,i) (((struct ParsingTableRow *)t->tableRows)[i])
+#define PRODUCTION_KEY(s) (((struct SelectSetKey *)s.key)->production)
+#define RULE_KEY(s) (((struct SelectSetKey *)s.key)->rule)
 
-typedef struct {
+typedef struct SetList SelectSetList;
+
+struct ParsingTableRow {
+    Rule *rule;                 // 行首的文法
+    Production **productions; // 行内的产生式
+};
+
+typedef struct Table ParsingTable;
+
+struct SelectSetKey {
     Rule *rule;                        // 文法
     Production *production;            // 产生式
-    char *terminals[32]; // 终结符数组
-    int terminalCount;                 // 终结符个数
-} SelectSet;
+};
 
-typedef struct {
-    SelectSet sets[32]; // Select 子集
-    int setCount;      // 子集数量
-} SelectSetList;
-
-SelectSet *GetSelectSet(const SelectSetList *setList,
-                        const Production *production);
-void AddOneSelectSet(SelectSetList *setList, const Rule *rule,
+void AddOneSelectSet(SetList *setList, const Rule *rule,
                      const Production *production);
-int AddTerminalToSelectSet(SelectSet *set, const char *terminal);
-int AddSetToSelectSet(SelectSet *desSet, const Set *srcSet);
-int RemoveVoidFromSelectSet(SelectSet *set);
-SelectSetList *GenSelectSetList(const Rule *ruleHead,
+SetList *GenSelectSetList(const Rule *ruleHead,
                                 const VoidTable *voidTable,
                                 const SetList *firstSetList,
                                 const SetList *followSetList);
 ParsingTable *GenParsingTable(const Rule *ruleHead,
-                              const SelectSetList *productionSetList);
+                              const SetList *productionSetList);
 Production **FindProduction(const ParsingTable *parsingTable,
                             const Rule *rule, const char *terminal);
-void PrintSelectSetList(const SelectSetList *productionSetList);
+void PrintSelectSetList(const SetList *productionSetList);
 void PrintParsingTable(const ParsingTable *parsingTable);
-char **GetTerminals(const Rule *ruleHead);
+char **GetTerminals(const Rule *ruleHead, int *count);
 void PrintProduction(const Production *production);
 
 #endif

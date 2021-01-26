@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
     /**
      * @brief 调用 GenFirstSetList 函数求文法的 First 集合
      */
-    SetList *firstSetList = GenFirstSetList(ruleHead, voidTable);
+    FirstSetList *firstSetList = GenFirstSetList(ruleHead, voidTable);
 
     /**
      * @brief 输出 First 集

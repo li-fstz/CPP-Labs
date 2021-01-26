@@ -15,7 +15,7 @@ void PrintVoidTable(const VoidTable *voidTable) {
                i == voidTable->colCount - 1 ? '\n' : '\t');
     }
     for (int i = 0; i < voidTable->colCount; i++) {
-        printf("%d%c", voidTable->tableRows[0].hasVoid[i],
+        printf("%d%c", VOIDTABLE_ROW(voidTable, 0).hasVoid[i],
                i == voidTable->colCount - 1 ? '\n' : '\t');
     }
 }
@@ -32,7 +32,7 @@ void MarkVoidAndNotVoid(Rule **copiedRulePrePtr, VoidTable *voidTable) {
     Rule *rule = *copiedRulePrePtr;
     Production *production;
     while (rule != NULL) {
-        production = PRODUCTIONHEAD(rule);
+        production = PRODUCTION_HEAD(rule);
 
         /**
          * @brief 标记当前文法是否包含 ε 产生式
@@ -43,9 +43,9 @@ void MarkVoidAndNotVoid(Rule **copiedRulePrePtr, VoidTable *voidTable) {
              * @brief 如果该产生式只有一个符号且是 ε
              * 则标记文法包含 ε 产生式
              */
-            Symbol *firstSymbol = SYMBOLHEAD(production);
+            Symbol *firstSymbol = SYMBOL_HEAD(production);
             if (firstSymbol->next == NULL &&
-                strcmp(SYMBOLNAME(firstSymbol), VOID_SYMBOL) == 0) {
+                strcmp(SYMBOL_NAME(firstSymbol), VOID_SYMBOL) == 0) {
                 hasVoidProduction = 1;
                 break;
             }
@@ -55,17 +55,17 @@ void MarkVoidAndNotVoid(Rule **copiedRulePrePtr, VoidTable *voidTable) {
              * 如果该产生式一定不能推出 ε 则该产生式需要被删除
              */
             int deleteThisProduction = 0;
-            for (Symbol *symbol = SYMBOLHEAD(production); symbol != NULL;
+            for (Symbol *symbol = SYMBOL_HEAD(production); symbol != NULL;
                  symbol = symbol->next) {
-                if (ISTOKEN(symbol) &&
-                    strcmp(SYMBOLNAME(symbol), VOID_SYMBOL) != 0) {
+                if (IS_TOKEN(symbol) &&
+                    strcmp(SYMBOL_NAME(symbol), VOID_SYMBOL) != 0) {
                     deleteThisProduction = 1;
                     break;
                 }
             }
             if (deleteThisProduction) {
                 Production *next = production->next;
-                PRODUCTIONHEAD(rule) = Delete(PRODUCTIONHEAD(rule), production);
+                PRODUCTION_HEAD(rule) = DeleteNode(PRODUCTION_HEAD(rule), production);
                 // FreeProduction(production);
                 production = next;
             } else {
@@ -79,10 +79,10 @@ void MarkVoidAndNotVoid(Rule **copiedRulePrePtr, VoidTable *voidTable) {
          * 如果该文法指向的产生式链表为空，
          * 则标记该文法不可以推出 ε，并删除该文法。
          */
-        if (hasVoidProduction || PRODUCTIONHEAD(rule) == NULL) {
-            *FindHasVoid(voidTable, RULENAME(rule)) = hasVoidProduction;
+        if (hasVoidProduction || PRODUCTION_HEAD(rule) == NULL) {
+            *FindHasVoid(voidTable, RULE_NAME(rule)) = hasVoidProduction;
             Rule *next = rule->next;
-            *copiedRulePrePtr = Delete(*copiedRulePrePtr, rule);
+            *copiedRulePrePtr = DeleteNode(*copiedRulePrePtr, rule);
             // FreeRule(rule);
             rule = next;
         } else {
@@ -99,11 +99,11 @@ void MarkVoidAndNotVoid(Rule **copiedRulePrePtr, VoidTable *voidTable) {
  */
 VoidTable *GenVoidTable(const Rule *ruleHead) {
     VoidTable *voidTable = malloc(sizeof(VoidTable));
-    voidTable->tableHead = GetNonTerminals(ruleHead);
-    for (voidTable->colCount = 0; voidTable->tableHead[voidTable->colCount];
-         voidTable->colCount++) {
-        voidTable->tableRows[0].hasVoid[voidTable->colCount] = -1;
-    }
+    voidTable->rowCount = 1;
+    voidTable->tableHead = GetNonTerminals(ruleHead, &voidTable->colCount);
+    voidTable->tableRows = malloc (sizeof (struct VoidTableRow));
+    VOIDTABLE_ROW(voidTable, 0).hasVoid = malloc(voidTable->colCount * sizeof(int));
+    memset (VOIDTABLE_ROW(voidTable, 0).hasVoid, -1, voidTable->colCount * sizeof(int));
     Rule *copiedRule = CopyRules(ruleHead), *rule;
 
     /**
@@ -127,13 +127,13 @@ VoidTable *GenVoidTable(const Rule *ruleHead) {
              * @brief 标记该文法含有一条可以推出 ε 的产生式
              */
             int hasVoidProduction;
-            for (Production *production = PRODUCTIONHEAD(rule);
+            for (Production *production = PRODUCTION_HEAD(rule);
                  production != NULL;
                  production = production->next) {
-                Symbol *symbol = SYMBOLHEAD(production);
+                Symbol *symbol = SYMBOL_HEAD(production);
                 hasVoidProduction = 0;
                 while (symbol != NULL) {
-                    switch (*FindHasVoid(voidTable, SYMBOLNAME(symbol))) {
+                    switch (*FindHasVoid(voidTable, SYMBOL_NAME(symbol))) {
                     case 1:
 
                         /**
@@ -143,11 +143,11 @@ VoidTable *GenVoidTable(const Rule *ruleHead) {
                          * 否则在此产生式中删去该符号
                          */
                         if (symbol->next == NULL &&
-                            symbol == SYMBOLHEAD(production)) {
+                            symbol == SYMBOL_HEAD(production)) {
                             hasVoidProduction = 1;
                         } else {
                             Symbol *next = symbol->next;
-                            SYMBOLHEAD(production) = Delete(SYMBOLHEAD(production), symbol);
+                            SYMBOL_HEAD(production) = DeleteNode(SYMBOL_HEAD(production), symbol);
                             // FreeSymble(symbol);
                             symbol = next;
                         }
@@ -178,9 +178,9 @@ VoidTable *GenVoidTable(const Rule *ruleHead) {
              */
             if (allProductionNotVoid || hasVoidProduction) {
                 isChange = 1;
-                *FindHasVoid(voidTable, RULENAME(rule)) = hasVoidProduction;
+                *FindHasVoid(voidTable, RULE_NAME(rule)) = hasVoidProduction;
                 Rule *next = rule->next;
-                ruleHead = Delete(ruleHead, rule);
+                copiedRule = DeleteNode(copiedRule, rule);
                 // FreeRule(rule);
                 rule = next;
             } else {
@@ -194,14 +194,14 @@ VoidTable *GenVoidTable(const Rule *ruleHead) {
 /**
  * @brief 在空表中根据文法名字找到值的位置
  *
- * @param pTable 空表的指针
+ * @param table 空表的指针
  * @param ruleName 文法的名字
  * @return int* 值在空表中的位置
  */
-int *FindHasVoid(VoidTable *pTable, const char *ruleName) {
-    for (int i = 0; i < pTable->colCount; i++) {
-        if (strcmp(pTable->tableHead[i], ruleName) == 0) {
-            return pTable->tableRows[0].hasVoid + i;
+int *FindHasVoid(VoidTable *table, const char *ruleName) {
+    for (int i = 0; i < table->colCount; i++) {
+        if (strcmp(table->tableHead[i], ruleName) == 0) {
+            return VOIDTABLE_ROW(table, 0).hasVoid + i;
         }
     }
     return 0;
@@ -213,10 +213,13 @@ int *FindHasVoid(VoidTable *pTable, const char *ruleName) {
  * @param rule 文法链表的头指针
  * @return char** 非终结符数组
  */
-char **GetNonTerminals(const Rule *ruleHead) {
-    char **nonTerminals = calloc(32, sizeof(char *));
-    for (int i = 0; ruleHead != NULL; ruleHead = ruleHead->next, i++) {
-        nonTerminals[i] = strdup(RULENAME(ruleHead));
+char **GetNonTerminals(const Rule *ruleHead, int *count) {
+    int i;
+    char **nonTerminals = NULL;
+    for (i = 0; ruleHead != NULL; ruleHead = ruleHead->next, i ++) {
+        nonTerminals = realloc (nonTerminals, (i + 1) * sizeof (char *));
+        nonTerminals[i] = strdup(RULE_NAME(ruleHead));
     }
+    *count = i;
     return nonTerminals;
 }

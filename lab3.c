@@ -24,13 +24,13 @@ int main(int argc, char *argv[]) {
     PrintRule(ruleHead);
     VoidTable *voidTable = GenVoidTable(ruleHead);
     PrintVoidTable(voidTable);
-    SetList *firstSetList = GenFirstSetList(ruleHead, voidTable);
+    FirstSetList *firstSetList = GenFirstSetList(ruleHead, voidTable);
     PrintFirstSetList(firstSetList);
 
     /**
      * @brief 调用 GenFollowSetList 函数求文法的 Follow 集合
      */
-    SetList *followSetList =
+    FollowSetList *followSetList =
         GenFollowSetList(ruleHead, voidTable, firstSetList);
 
     /**
