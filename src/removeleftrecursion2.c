@@ -1,15 +1,18 @@
 #include "removeleftrecursion2.h"
 
+#include <stdio.h>
+
 /**
  * @brief 判断当前文法中的符号是否需要被替换，
  *        如果这个符号是非终结符且指向的文法在当前文法之前，
  *        那么该终结符应该被替换
  *
- * @param rule 文法的指针
- * @param symbol 符号的指针
+ * @param rule 文法指针
+ * @param symbol 符号指针
  * @return int 是否需要被替换
  */
 int SymbolNeedReplace(const Rule *rule, const Symbol *symbol) {
+    assert(IS_RULE(rule) && IS_SYMBOL(symbol));
     if (IS_TOKEN(symbol)) {
         return 0;
     } else {
@@ -28,18 +31,20 @@ int SymbolNeedReplace(const Rule *rule, const Symbol *symbol) {
 /**
  * @brief 替换产生式的第一个符号
  *
- * @param productionTemplate 需要被替换的产生式的指针
- * @return Symbol* 替换后的新产生式的指针，
+ * @param productionTemplate 需要被替换的产生式指针
+ * @return Production* 替换后的新产生式指针，
  *                 注意第一个符号指向的产生式可能是一个链表，
  *                 所以返回的新产生是也可能是一个链表
  */
 Production *ReplaceProduction(const Production *productionTemplate) {
-    Production *productionsOfFirstSymble =
-                   CopyProductions(PRODUCTION_HEAD(RULE(SYMBOL_HEAD(productionTemplate)))),
+    assert(IS_PRODUCTION(productionTemplate));
+    Production *productionsOfFirstSymble = CopyProductions(
+                   PRODUCTION_HEAD(RULE(SYMBOL_HEAD(productionTemplate)))),
                *tmpProduction = productionsOfFirstSymble;
     while (tmpProduction) {
-        //leak
-        AppendNode(SYMBOL_HEAD(tmpProduction), SYMBOL_HEAD(CopyProduction(productionTemplate))->next);
+        // leak
+        AppendNode(SYMBOL_HEAD(tmpProduction),
+                   SYMBOL_HEAD(CopyProduction(productionTemplate))->next);
         tmpProduction = tmpProduction->next;
     }
     return productionsOfFirstSymble;
@@ -48,9 +53,10 @@ Production *ReplaceProduction(const Production *productionTemplate) {
 /**
  * @brief 释放一个产生式链表的内存
  *
- * @param production 产生式链表的头指针
+ * @param production 产生式链表头指针
  */
 void FreeProduction(Production *production) {
+    assert(IS_PRODUCTION(production));
     if (production->next) {
         FreeProduction(production->next);
     } else {
@@ -61,11 +67,12 @@ void FreeProduction(Production *production) {
 /**
  * @brief 判断该产生式是否存在左递归
  *
- * @param production 产生式的指针
- * @param rule 指向该产生式的文法的指针
+ * @param production 产生式指针
+ * @param rule 指向该产生式的文法指针
  * @return int 是否存在左递归
  */
 int ProductionHasLeftRecursion(Production *production, Rule *rule) {
+    assert(IS_PRODUCTION(production) && IS_RULE(rule));
     if (IS_TOKEN(SYMBOL_HEAD(production))) {
         return 0;
     } else {
@@ -76,10 +83,11 @@ int ProductionHasLeftRecursion(Production *production, Rule *rule) {
 /**
  * @brief 判断该文法是否存在左递归
  *
- * @param rule 文法的指针
+ * @param rule 文法指针
  * @return int  是否存在左递归
  */
 int RuleHasLeftRecursion(const Rule *rule) {
+    assert(IS_RULE(rule));
     Production *tmp = PRODUCTION_HEAD(rule);
     while (tmp) {
         if (ProductionHasLeftRecursion(tmp, rule)) {
@@ -94,10 +102,11 @@ int RuleHasLeftRecursion(const Rule *rule) {
  * @brief 讲一个产生式添加到文法指向的产生式链表尾部，
  *        当产生式指针为 NULL 时则添加 ε
  *
- * @param rule 文法的指针
- * @param newProduction 产生式的指针
+ * @param rule 文法指针
+ * @param production 产生式指针
  */
-void AddProductionToRule(Rule *rule, Production *production) {
+void AddProductionToRule(Rule *rule, const Production *production) {
+    assert(IS_RULE(rule) && (!production || IS_PRODUCTION(production)));
     if (!production) {
         production = NewProduction();
         Symbol *symbol = NewSymbol(VOID_SYMBOL);
@@ -109,9 +118,10 @@ void AddProductionToRule(Rule *rule, Production *production) {
 /**
  * @brief 消除左递归
  *
- * @param ruleHead 文法链表的头指针
+ * @param ruleHead 文法链表头指针
  */
 void RemoveLeftRecursion(Rule *ruleHead) {
+    assert(IS_RULE(ruleHead));
     Rule *rule, *newRule;
     Production *production;
 
@@ -127,25 +137,25 @@ void RemoveLeftRecursion(Rule *ruleHead) {
             /**
              * @brief 对当前文法对应的所有产生式进行替换
              */
-            for (production = PRODUCTION_HEAD(rule);
-                 production != NULL;
-                production = production->next) {
+            for (production = PRODUCTION_HEAD(rule); production != NULL;
+                 production = production->next) {
                 /**
                  * @brief 判断当前产生式的第一个符号是否需要替换
                  * 如果这个符号对应的文法在当前文法的前面，则需要被替换
                  */
                 if (SymbolNeedReplace(rule, SYMBOL_HEAD(production))) {
                     isChange = 1;
-                    Production *newProductions =
-                        ReplaceProduction(production);
+                    Production *newProductions = ReplaceProduction(production);
 
                     /**
                      * @brief 用替换后的产生式链表替换之前的产生式，
                      * 最后释放之前产生式的内存
                      */
-                    PRODUCTION_HEAD(rule) = InsertNode(PRODUCTION_HEAD(rule), production, newProductions);
-                    PRODUCTION_HEAD(rule) = DeleteNode(PRODUCTION_HEAD(rule), production);
-                    //FreeProduction(production);
+                    PRODUCTION_HEAD(rule) = InsertNode(
+                        PRODUCTION_HEAD(rule), production, newProductions);
+                    PRODUCTION_HEAD(rule) =
+                        DeleteNode(PRODUCTION_HEAD(rule), production);
+                    // FreeProduction(production);
                     break;
                 }
                 if (isChange) {
@@ -165,8 +175,8 @@ void RemoveLeftRecursion(Rule *ruleHead) {
          * @brief 创建新文法
          */
         char newName[MAX_STR_LENGTH];
-        strcpy (newName, RULE_NAME(rule));
-        strcat (newName, POSTFIX);
+        strcpy(newName, RULE_NAME(rule));
+        strcat(newName, POSTFIX);
         newRule = NewRule(newName);
 
         production = PRODUCTION_HEAD(rule);
@@ -183,9 +193,11 @@ void RemoveLeftRecursion(Rule *ruleHead) {
              * 然后将此产生式的左递归转换为右递归，然后将其加入到新文法中；
              * 如果当前产生式不包含左递归，则在产生式尾部添加新文法的符号。
              */
-            if (!IS_TOKEN(SYMBOL_HEAD(production)) && RULE(SYMBOL_HEAD(production)) == rule) {
+            if (!IS_TOKEN(SYMBOL_HEAD(production)) &&
+                RULE(SYMBOL_HEAD(production)) == rule) {
                 Production *next = production->next;
-                PRODUCTION_HEAD(rule) = DeleteNode(PRODUCTION_HEAD(rule), production);
+                PRODUCTION_HEAD(rule) =
+                    DeleteNode(PRODUCTION_HEAD(rule), production);
                 production->next = NULL;
                 SYMBOL_HEAD(production) = SYMBOL_HEAD(production)->next;
                 AppendNode(SYMBOL_HEAD(production), tmp);

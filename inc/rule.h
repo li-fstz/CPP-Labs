@@ -19,14 +19,9 @@
 #define IS_PRODUCTION(r) ((r) && (r)->type == ProductionNode)
 #define IS_SYMBOL(r) ((r) && (r)->type == SymbolNode)
 
-
 typedef struct LinkedNode LinkedNode, Rule, Production, Symbol;
 
-typedef enum NodeType {
-    RuleNode,
-    ProductionNode,
-    SymbolNode
-} NodeType;
+typedef enum { RuleNode, ProductionNode, SymbolNode } NodeType;
 
 struct LinkedNode {
     void *value;
@@ -69,6 +64,8 @@ Rule *CopyRule(const Rule *ruleHead);
 Rule *CopyRules(const Rule *ruleHeadTemplate);
 LinkedNode *DeleteNode(LinkedNode *head, LinkedNode *node);
 LinkedNode *AppendNode(LinkedNode *head, const LinkedNode *node);
-LinkedNode *InsertNode(LinkedNode *head, const LinkedNode *destNode, LinkedNode *node);
+LinkedNode *InsertNode(LinkedNode *head, const LinkedNode *destNode,
+                       LinkedNode *node);
 LinkedNode *NewNode();
+
 #endif

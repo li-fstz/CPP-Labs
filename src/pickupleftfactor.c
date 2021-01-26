@@ -8,9 +8,10 @@
 /**
  * @brief 提取左因子
  *
- * @param ruleHead 文法链表的头指针
+ * @param ruleHead 文法链表头指针
  */
 void PickupLeftFactor(Rule *ruleHead) {
+    assert(IS_RULE(ruleHead));
     Rule *rule, *newRule;
     Production *production, *productionTemplate;
 
@@ -47,7 +48,7 @@ void PickupLeftFactor(Rule *ruleHead) {
              */
             newRule = NewRule(RULE_NAME(rule));
             char *newName = GetUniqueRuleName(rule, RULE_NAME(newRule));
-            free (RULE_NAME(newRule));
+            free(RULE_NAME(newRule));
             RULE_NAME(newRule) = newName;
             isChange = 1;
 
@@ -55,7 +56,7 @@ void PickupLeftFactor(Rule *ruleHead) {
              * @brief 把模板产生式左因子之后的产生式加入到新文法中
              * 然后将其替换为新文法的符号
              */
-            
+
             Production *newProduction = NewProduction();
             SYMBOL_HEAD(newProduction) = GetSymbol(productionTemplate, count);
             AddProductionToRule(newRule, newProduction);
@@ -78,9 +79,10 @@ void PickupLeftFactor(Rule *ruleHead) {
                     SYMBOL_HEAD(newProduction) = GetSymbol(production, count);
                     AddProductionToRule(newRule, newProduction);
                     Production *next = production->next;
-                    productionTemplate->next = DeleteNode(productionTemplate->next, production);
+                    productionTemplate->next =
+                        DeleteNode(productionTemplate->next, production);
                     production = next;
-                    //FreeProduction(production);
+                    // FreeProduction(production);
                 } else {
                     production = production->next;
                 }
@@ -100,11 +102,12 @@ void PickupLeftFactor(Rule *ruleHead) {
 /**
  * @brief 根据下标找到 Production 中的 Symbol
  *
- * @param production Production 的指针
+ * @param production Production 指针
  * @param index 下标
- * @return Symbol* 如果找到则返回 Symbol 的指针，否则返回 NULL
+ * @return Symbol* 如果找到则返回 Symbol 指针，否则返回 NULL
  */
-Symbol *GetSymbol(Production *production, int index) {
+Symbol *GetSymbol(const Production *production, int index) {
+    assert(IS_PRODUCTION(production));
     int i = 0;
     Symbol *symbol;
     for (symbol = SYMBOL_HEAD(production), i = 0; symbol != NULL;
@@ -122,13 +125,14 @@ Symbol *GetSymbol(Production *production, int index) {
  * @param production 产生式指针
  * @return int 最大长度
  */
-int LeftFactorMaxLength(Production *production) {
+int LeftFactorMaxLength(const Production *production) {
+    assert(IS_PRODUCTION(production));
     int maxLength = 0;
-    for (Production *cmpProduction = production->next;
-         cmpProduction != NULL;
+    for (Production *cmpProduction = production->next; cmpProduction != NULL;
          cmpProduction = cmpProduction->next) {
         int length = 0;
-        for (Symbol *a = SYMBOL_HEAD(production), *b = SYMBOL_HEAD(cmpProduction);
+        for (Symbol *a = SYMBOL_HEAD(production),
+                    *b = SYMBOL_HEAD(cmpProduction);
              a && b && !strcmp(SYMBOL_NAME(a), SYMBOL_NAME(b));
              length++, a = a->next, b = b->next) {
         }
@@ -140,16 +144,16 @@ int LeftFactorMaxLength(Production *production) {
 /**
  * @brief 判断产生式是否需要被替换
  *
- * @param productionTemplate 模板产生式的指针
+ * @param productionTemplate 模板产生式指针
  * @param count 指定要比较的符号个数
- * @param production 产生式的指针
+ * @param production 产生式指针
  * @return int
  */
 int NeedPickup(const Production *productionTemplate, int count,
                const Production *production) {
+    assert(IS_PRODUCTION(production) && IS_PRODUCTION(productionTemplate));
     Symbol *a = SYMBOL_HEAD(productionTemplate), *b = SYMBOL_HEAD(production);
-    for (int i = 0; i < count;
-         i++, a = a->next, b = b->next) {
+    for (int i = 0; i < count; i++, a = a->next, b = b->next) {
         if (!a || !b || strcmp(SYMBOL_NAME(a), SYMBOL_NAME(b))) {
             return 0;
         }
@@ -160,10 +164,11 @@ int NeedPickup(const Production *productionTemplate, int count,
 /**
  * @brief 将产生式加入到文法中的产生式链表中
  *
- * @param rule 文法的指针
- * @param production 产生式的指针
+ * @param rule 文法指针
+ * @param production 产生式指针
  */
-void AddProductionToRule(Rule *rule, Production *production) {
+void AddProductionToRule(Rule *rule, const Production *production) {
+    assert(IS_RULE(rule) && (!production || IS_PRODUCTION(production)));
     if (!production) {
         production = NewProduction();
         Symbol *symbol = NewSymbol(VOID_SYMBOL);
@@ -175,10 +180,12 @@ void AddProductionToRule(Rule *rule, Production *production) {
 /**
  * @brief 得到一个不重复的新文法名，如果存在冲突则添加后缀
  *
- * @param ruleHead 文法链表的头指针
- * @param ruleName 像取得新文法名
+ * @param ruleHead 文法链表头指针
+ * @param ruleName 文法名前缀
+ * @return char* 新文法名
  */
 char *GetUniqueRuleName(const Rule *ruleHead, const char *ruleName) {
+    assert(IS_RULE(ruleHead) && ruleName);
     char tmp[MAX_STR_LENGTH];
     strcpy(tmp, ruleName);
     for (Rule *rule = ruleHead; rule != NULL;) {
@@ -189,15 +196,16 @@ char *GetUniqueRuleName(const Rule *ruleHead, const char *ruleName) {
         }
         rule = rule->next;
     }
-    return strdup (tmp);
+    return strdup(tmp);
 }
 
 /**
  * @brief 释放整个产生式链表的内存
  *
- * @param production 产生式链表的头指针
+ * @param production 产生式链表头指针
  */
 void FreeProduction(Production *production) {
+    assert(IS_PRODUCTION(production));
     if (production->next) {
         FreeProduction(production->next);
     } else {

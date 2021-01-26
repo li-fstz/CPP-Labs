@@ -8,10 +8,10 @@
  * A -> Aa | bA | c | Ad
  */
 const struct RULE_ENTRY ruleTable[] = {{"A",
-                                         {{{0, "A"}, {1, "a"}},
-                                          {{1, "b"}, {0, "A"}},
-                                          {{1, "c"}},
-                                          {{0, "A"}, {1, "d"}}}}};
+                                        {{{0, "A"}, {1, "a"}},
+                                         {{1, "b"}, {0, "A"}},
+                                         {{1, "c"}},
+                                         {{0, "A"}, {1, "d"}}}}};
 
 int main(int argc, char *argv[]) {
     Rule *ruleHead =

@@ -1,5 +1,6 @@
 #include "parser.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -8,15 +9,24 @@
 /**
  * @brief 将符号压入栈中
  *
- * @param stack 栈的指针
+ * @param stack 栈指针
  * @param symbol 符号指针
  */
 void PushSymbol(ParsingStack *stack, const Symbol *symbol) {
-    stack->symbols = realloc(stack->symbols, (stack->symbolCount + 1) * sizeof (Symbol *));
+    assert(stack && IS_SYMBOL(symbol));
+    stack->symbols =
+        realloc(stack->symbols, (stack->symbolCount + 1) * sizeof(Symbol *));
     stack->symbols[stack->symbolCount++] = symbol;
 }
 
+/**
+ * @brief PushProduction 的辅助函数
+ *
+ * @param stack 栈指针
+ * @param symbol 符号指针
+ */
 void PushProductionSymbol(ParsingStack *stack, const Symbol *symbol) {
+    assert(stack && (IS_SYMBOL(symbol) || !symbol));
     if (symbol == NULL) {
         return;
     }
@@ -25,26 +35,30 @@ void PushProductionSymbol(ParsingStack *stack, const Symbol *symbol) {
         PushSymbol(stack, symbol);
     }
 }
+
 /**
  * @brief 将产生式逆向压入栈中，在压栈时忽略 ε
  *
- * @param stack 栈的指针
+ * @param stack 栈指针
  * @param production 产生式指针
  */
 void PushProduction(ParsingStack *stack, const Production *production) {
+    assert(stack && IS_PRODUCTION(production));
     PushProductionSymbol(stack, SYMBOL_HEAD(production));
 }
 
 /**
  * @brief 将符号从栈中弹出
  *
- * @param stack 栈的指针
- * @return Symbol* 符号的指针
+ * @param stack 栈指针
+ * @return Symbol* 符号指针
  */
-const Symbol *PopSymbol(ParsingStack *stack) {
+Symbol *PopSymbol(ParsingStack *stack) {
+    assert(stack);
     if (stack->symbolCount) {
         Symbol *r = stack->symbols[--stack->symbolCount];
-        stack->symbols = realloc(stack->symbols, stack->symbolCount * sizeof (Symbol *));
+        stack->symbols =
+            realloc(stack->symbols, stack->symbolCount * sizeof(Symbol *));
         return r;
     } else {
         assert(0);
@@ -55,9 +69,10 @@ const Symbol *PopSymbol(ParsingStack *stack) {
 /**
  * @brief 输出栈
  *
- * @param stack 栈的指针
+ * @param stack 栈指针
  */
 void PrintParsingStack(const ParsingStack *stack) {
+    assert(stack);
     for (int i = 0; i < stack->symbolCount; i++) {
         printf(SYMBOL_NAME(stack->symbols[i]));
     }
@@ -66,12 +81,13 @@ void PrintParsingStack(const ParsingStack *stack) {
 /**
  * @brief 执行自顶向下语法分析
  *
- * @param ruleHead 文法链表的头指针
- * @param parsingTable 预测分析表的指针
+ * @param ruleHead 文法链表头指针
+ * @param parsingTable 预测分析表指针
  * @param string 待解析文本
  */
 void Parse(const Rule *ruleHead, const ParsingTable *parsingTable,
            const char *string) {
+    assert(IS_RULE(ruleHead) && IS_PARSING_TABLE(parsingTable) && string);
     /**
      * @brief 初始化分析栈
      */
@@ -81,7 +97,8 @@ void Parse(const Rule *ruleHead, const ParsingTable *parsingTable,
      * @brief 初始化开始符号和结束符号，
      * 并压入栈中
      */
-    Symbol *end = NewSymbol(END_SYMBOL), *start = NewSymbol(RULE_NAME(ruleHead));
+    Symbol *end = NewSymbol(END_SYMBOL),
+           *start = NewSymbol(RULE_NAME(ruleHead));
     PushSymbol(stack, end);
     RULE(start) = ruleHead;
     PushSymbol(stack, start);

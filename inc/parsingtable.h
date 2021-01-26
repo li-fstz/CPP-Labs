@@ -2,37 +2,41 @@
 #define PARSINGTABLE_H_
 
 #include "first.h"
+#include "follow.h"
 #include "rule.h"
 
-#define PARSINGTABLE_ROW(t,i) (((struct ParsingTableRow *)t->tableRows)[i])
+#define PARSINGTABLE_ROW(t, i) (((struct ParsingTableRow *)t->tableRows)[i])
 #define PRODUCTION_KEY(s) (((struct SelectSetKey *)s.key)->production)
 #define RULE_KEY(s) (((struct SelectSetKey *)s.key)->rule)
+#define IS_PARSING_TABLE(t) ((t) && (t)->type == Parsing)
+#define IS_SELECT_SET(s) ((s) && (s)->type == SelectSet)
 
-typedef struct SetList SelectSetList;
+
 
 struct ParsingTableRow {
-    Rule *rule;                 // 行首的文法
+    Rule *rule;               // 行首的文法
     Production **productions; // 行内的产生式
 };
 
-typedef struct Table ParsingTable;
-
 struct SelectSetKey {
-    Rule *rule;                        // 文法
-    Production *production;            // 产生式
+    Rule *rule;             // 文法
+    Production *production; // 产生式
 };
+
+typedef struct Table ParsingTable;
+typedef struct SetList SelectSetList;
 
 void AddOneSelectSet(SetList *setList, const Rule *rule,
                      const Production *production);
-SetList *GenSelectSetList(const Rule *ruleHead,
+SelectSetList *GenSelectSetList(const Rule *ruleHead,
                                 const VoidTable *voidTable,
-                                const SetList *firstSetList,
-                                const SetList *followSetList);
+                                const FirstSetList *firstSetList,
+                                const FollowSetList *followSetList);
 ParsingTable *GenParsingTable(const Rule *ruleHead,
-                              const SetList *productionSetList);
-Production **FindProduction(const ParsingTable *parsingTable,
-                            const Rule *rule, const char *terminal);
-void PrintSelectSetList(const SetList *productionSetList);
+                              const SelectSetList *selectSetList);
+Production **FindProduction(const ParsingTable *parsingTable, const Rule *rule,
+                            const char *terminal);
+void PrintSelectSetList(const SelectSetList *selectSetList);
 void PrintParsingTable(const ParsingTable *parsingTable);
 char **GetTerminals(const Rule *ruleHead, int *count);
 void PrintProduction(const Production *production);

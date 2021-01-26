@@ -4,9 +4,8 @@
 #define POSTFIX "'"
 
 #include "rule.h"
-#include <stdio.h>
 
-void AddProductionToRule(Rule *rule, Production *newProduction);
+void AddProductionToRule(Rule *rule, const Production *newProduction);
 void RemoveLeftRecursion(Rule *ruleHead);
 
 #endif

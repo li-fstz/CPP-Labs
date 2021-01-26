@@ -12,7 +12,8 @@
  *
  * @param firstSetList First 集指针
  */
-void PrintFirstSetList(const SetList *firstSetList) {
+void PrintFirstSetList(const FirstSetList *firstSetList) {
+    assert(IS_FIRST_SET(firstSetList));
     printf("\nThe First Set:\n");
     for (int i = 0; i < firstSetList->setCount; i++) {
         printf("First(%s) = { ", firstSetList->sets[i].key);
@@ -27,18 +28,28 @@ void PrintFirstSetList(const SetList *firstSetList) {
     }
 }
 
-int strKeyCmp (const void *a, const void *b) {
+/**
+ * @brief 比较字符串键是否相等
+ *
+ * @param a 字符串 a
+ * @param b 字符串 b
+ * @return int 返回是否相等
+ */
+int strKeyCmp(const void *a, const void *b) {
+    assert(a && b);
     return strcmp(a, b) == 0;
 }
 
 /**
  * @brief 生成文法的 First 集
  *
- * @param ruleHead 文法链表的头指针
- * @param voidTable 空表的指针
- * @return SetList* 生成的 First 集的指针
+ * @param ruleHead 文法链表头指针
+ * @param voidTable 空表指针
+ * @return FirstSetList* 生成的 First 集指针
  */
-FirstSetList *GenFirstSetList(const Rule *ruleHead, const VoidTable *voidTable) {
+FirstSetList *GenFirstSetList(const Rule *ruleHead,
+                              const VoidTable *voidTable) {
+    assert(IS_RULE(ruleHead) && voidTable);
     FirstSetList *firstSetList = calloc(1, sizeof(SetList));
     firstSetList->type = FirstSet;
 
@@ -98,8 +109,8 @@ FirstSetList *GenFirstSetList(const Rule *ruleHead, const VoidTable *voidTable) 
                         /**
                          * @brief 非终结符对应的文法 First 子集
                          */
-                        Set *srcSet =
-                            GetSet(firstSetList, SYMBOL_NAME(symbol), strKeyCmp);
+                        Set *srcSet = GetSet(firstSetList, SYMBOL_NAME(symbol),
+                                             strKeyCmp);
                         isChange = AddSetToSet(desSet, srcSet) || isChange;
                         if (!*FindHasVoid(voidTable, srcSet->key)) {
                             break;
@@ -113,31 +124,36 @@ FirstSetList *GenFirstSetList(const Rule *ruleHead, const VoidTable *voidTable) 
 }
 
 /**
- * @brief 在 First 集或 Follow 集中添加一个非终结符子集
+ * @brief 在集合列表中添加一个非终结符子集
  *
- * @param setList First 集或 Follow 集的指针
- * @param name 非终结符子集名字
+ * @param setList 集合列表指针
+ * @param key 子集的键指针
+ * @param cmp 比较键是否相等函数指针
  */
 void AddOneSet(SetList *setList, const void *key, CmpFunc cmp) {
+    assert(setList && key && cmp);
     for (int i = 0; i < setList->setCount; i++) {
         if (cmp(setList->sets[i].key, key)) {
             return;
         }
     }
-    setList->sets = realloc(setList->sets, (setList->setCount + 1) * sizeof (Set));
+    setList->sets =
+        realloc(setList->sets, (setList->setCount + 1) * sizeof(Set));
     setList->sets[setList->setCount].terminalCount = 0;
     setList->sets[setList->setCount].terminals = NULL;
     setList->sets[setList->setCount++].key = key;
 }
 
 /**
- * @brief 在 First 集或 Follow 集中查找一个非终结符子集
+ * @brief 在集合列表中查找一个非终结符子集
  *
- * @param setList First 集或 Follow 集的指针
- * @param name 非终结符子集名字
- * @return Set* 如果找到则返回子集的指针，否则返回 NULL
+ * @param setList 集合列表指针
+ * @param key 子集的键指针
+ * @param cmp 比较键是否相等函数指针
+ * @return Set* 如果找到则返回子集指针，否则返回 NULL
  */
 Set *GetSet(const SetList *setList, const void *key, CmpFunc cmp) {
+    assert(setList && key && cmp);
     for (int i = 0; i < setList->setCount; i++) {
         if (cmp(setList->sets[i].key, key)) {
             return setList->sets + i;
@@ -154,13 +170,15 @@ Set *GetSet(const SetList *setList, const void *key, CmpFunc cmp) {
  * @return int 对子集是否有修改
  */
 int AddTerminalToSet(Set *set, const char *terminal) {
+    assert(set && terminal);
     for (int i = 0; i < set->terminalCount; i++) {
         if (strcmp(set->terminals[i], terminal) == 0) {
             return 0;
         }
     }
-    set->terminals = realloc (set->terminals, (set->terminalCount + 1) * sizeof (char *));
-    set->terminals[set->terminalCount++] = strdup (terminal);
+    set->terminals =
+        realloc(set->terminals, (set->terminalCount + 1) * sizeof(char *));
+    set->terminals[set->terminalCount++] = strdup(terminal);
     return 1;
 }
 
@@ -172,6 +190,7 @@ int AddTerminalToSet(Set *set, const char *terminal) {
  * @return int 对目标子集是否有修改
  */
 int AddSetToSet(Set *desSet, const Set *srcSet) {
+    assert(desSet && srcSet);
     int flag = 0;
     for (int i = 0; i < srcSet->terminalCount; i++) {
         flag = AddTerminalToSet(desSet, srcSet->terminals[i]) || flag;

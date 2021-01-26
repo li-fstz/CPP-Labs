@@ -11,17 +11,19 @@
  * @brief 从子集中删去 ε
  *
  * @param set 子集指针
+ * @return int 返回是否修改
  */
 int RemoveVoidFromSet(Set *set) {
+    assert(set);
     for (int i = 0; i < set->terminalCount; i++) {
         if (strcmp(set->terminals[i], VOID_SYMBOL) == 0) {
             if (i != set->terminalCount - 1) {
                 memmove(set->terminals + i, set->terminals + i + 1,
-                        sizeof(char *) *
-                            (set->terminalCount - i - 1));
+                        sizeof(char *) * (set->terminalCount - i - 1));
             }
             set->terminalCount--;
-            set->terminals = realloc(set->terminals, set->terminalCount * sizeof(char *));
+            set->terminals =
+                realloc(set->terminals, set->terminalCount * sizeof(char *));
             return 1;
         }
     }
@@ -31,16 +33,18 @@ int RemoveVoidFromSet(Set *set) {
 /**
  * @brief 生成文法的 Follow 集
  *
- * @param ruleHead 文法链表的头指针
- * @param voidTable 空表的指针
- * @param firstSetList Follow 集的指针
- * @return SetList* 生成 First 集的指针
+ * @param ruleHead 文法链表头指针
+ * @param voidTable 空表指针
+ * @param firstSetList First 集指针
+ * @return FollowSetList* 生成 Follow 集指针
  */
-FollowSetList *GenFollowSetList(const Rule *ruleHead, const VoidTable *voidTable,
-                          const FirstSetList *firstSetList) {
+FollowSetList *GenFollowSetList(const Rule *ruleHead,
+                                const VoidTable *voidTable,
+                                const FirstSetList *firstSetList) {
+    assert(IS_RULE(ruleHead) && voidTable && IS_FIRST_SET(firstSetList));
     FollowSetList *followSetList = calloc(1, sizeof(SetList));
     followSetList->type = FollowSet;
-    
+
     const Rule *rule;
     const Production *production;
     const Symbol *symbol;
@@ -96,9 +100,9 @@ FollowSetList *GenFollowSetList(const Rule *ruleHead, const VoidTable *voidTable
                                 break;
                             }
                         } else {
-                            AddSetToSet(
-                                &tmpSet,
-                                GetSet(firstSetList, SYMBOL_NAME(tmpSymbol), strKeyCmp));
+                            AddSetToSet(&tmpSet, GetSet(firstSetList,
+                                                        SYMBOL_NAME(tmpSymbol),
+                                                        strKeyCmp));
                             if (!*FindHasVoid(voidTable,
                                               SYMBOL_NAME(tmpSymbol))) {
                                 break;
@@ -115,7 +119,8 @@ FollowSetList *GenFollowSetList(const Rule *ruleHead, const VoidTable *voidTable
                     /**
                      * @brief 目标 Follow 子集
                      */
-                    Set *desSet = GetSet(followSetList, SYMBOL_NAME(symbol), strKeyCmp);
+                    Set *desSet =
+                        GetSet(followSetList, SYMBOL_NAME(symbol), strKeyCmp);
                     isChange = AddSetToSet(desSet, &tmpSet) || isChange;
 
                     /**
@@ -125,10 +130,10 @@ FollowSetList *GenFollowSetList(const Rule *ruleHead, const VoidTable *voidTable
                      * 加入目标 Follow子集。
                      */
                     if (tmpSymbol == NULL) {
-                        isChange =
-                            AddSetToSet(desSet, GetSet(followSetList,
-                                                        RULE_NAME(rule), strKeyCmp)) ||
-                            isChange;
+                        isChange = AddSetToSet(desSet, GetSet(followSetList,
+                                                              RULE_NAME(rule),
+                                                              strKeyCmp)) ||
+                                   isChange;
                     }
                 }
             }
@@ -143,6 +148,7 @@ FollowSetList *GenFollowSetList(const Rule *ruleHead, const VoidTable *voidTable
  * @param followSetList Follow 集指针
  */
 void PrintFollowSetList(const FollowSetList *followSetList) {
+    assert(IS_FOLLOW_SET(followSetList));
     printf("\nThe Follow Set:\n");
     for (int i = 0; i < followSetList->setCount; i++) {
         printf("Follow(%s) = { ", followSetList->sets[i].key);

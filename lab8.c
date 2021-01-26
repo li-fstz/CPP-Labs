@@ -28,9 +28,11 @@ int main(int argc, char *argv[]) {
     PrintVoidTable(voidTable);
     FirstSetList *firstSetList = GenFirstSetList(ruleHead, voidTable);
     PrintFirstSetList(firstSetList);
-    FollowSetList *followSetList = GenFollowSetList(ruleHead, voidTable, firstSetList);
+    FollowSetList *followSetList =
+        GenFollowSetList(ruleHead, voidTable, firstSetList);
     PrintFollowSetList(followSetList);
-    SelectSetList *selectSetList = GenSelectSetList(ruleHead, voidTable, firstSetList, followSetList);
+    SelectSetList *selectSetList =
+        GenSelectSetList(ruleHead, voidTable, firstSetList, followSetList);
     PrintSelectSetList(selectSetList);
     ParsingTable *parsingTable = GenParsingTable(ruleHead, selectSetList);
     PrintParsingTable(parsingTable);
