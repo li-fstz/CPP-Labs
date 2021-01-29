@@ -98,7 +98,7 @@ ParsingTable *GenParsingTable(const Rule *ruleHead,
     }
     for (int i = 0; i < selectSetList->setCount; i++) {
         for (int j = 0; j < selectSetList->sets[i].terminalCount; j++) {
-            Production **foundProduction =
+            const Production **foundProduction =
                 FindProduction(parsingTable, RULE_KEY(selectSetList->sets[i]),
                                selectSetList->sets[i].terminals[j]);
             if (*foundProduction) {
@@ -213,7 +213,7 @@ char **GetTerminals(const Rule *ruleHead, int *count) {
  * @param terminal 终结符
  * @return Production** 如果存在则返回该产生式在预测分析表中的位置，否则返回 NULL
  */
-Production **FindProduction(const ParsingTable *parsingTable, const Rule *rule,
+const Production **FindProduction(const ParsingTable *parsingTable, const Rule *rule,
                             const char *terminal) {
     assert(IS_PARSING_TABLE(parsingTable) && IS_RULE(rule) && terminal);
     int i;

@@ -15,12 +15,14 @@ struct Table {
     char **tableHead; // 表头
     void *tableRows;
 };
+
 struct VoidTableRow {
     int *hasVoid;
 };
+
 typedef struct Table Table, VoidTable;
 VoidTable *GenVoidTable(const Rule *ruleHead);
-int *FindHasVoid(VoidTable *table, const char *ruleName);
+int *FindHasVoid(const VoidTable *table, const char *ruleName);
 void PrintVoidTable(const VoidTable *table);
 char **GetNonTerminals(const Rule *ruleHead, int *count);
 

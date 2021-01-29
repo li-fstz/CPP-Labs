@@ -9,7 +9,7 @@
 typedef enum { FirstSet, FollowSet, SelectSet } SetType;
 
 typedef struct {
-    void *key;
+    const void *key;
     char **terminals;  // 终结符数组
     int terminalCount; // 终结符个数
 } Set;

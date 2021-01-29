@@ -53,10 +53,10 @@ void PushProduction(ParsingStack *stack, const Production *production) {
  * @param stack 栈指针
  * @return Symbol* 符号指针
  */
-Symbol *PopSymbol(ParsingStack *stack) {
+const Symbol *PopSymbol(ParsingStack *stack) {
     assert(stack);
     if (stack->symbolCount) {
-        Symbol *r = stack->symbols[--stack->symbolCount];
+        const Symbol *r = stack->symbols[--stack->symbolCount];
         stack->symbols =
             realloc(stack->symbols, stack->symbolCount * sizeof(Symbol *));
         return r;
@@ -115,7 +115,7 @@ void Parse(const Rule *ruleHead, const ParsingTable *parsingTable,
          * 如果是非终结符则从预测分析表中
          * 找到产生式逆向压入栈中。
          */
-        Symbol *topSymbol = PopSymbol(stack);
+        const Symbol *topSymbol = PopSymbol(stack);
         if (IS_TOKEN(topSymbol)) {
             if (stack->symbolCount) {
                 if (*SYMBOL_NAME(topSymbol) == *string) {
@@ -134,7 +134,7 @@ void Parse(const Rule *ruleHead, const ParsingTable *parsingTable,
             }
         } else {
             char ch[] = {*string, '\0'};
-            Production *production =
+            const Production *production =
                 *FindProduction(parsingTable, RULE(topSymbol), ch);
             printf("%s->", SYMBOL_NAME(topSymbol));
             PrintProduction(production);

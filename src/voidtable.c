@@ -41,6 +41,7 @@ void MarkVoidAndNotVoid(Rule **copiedRulePrePtr, VoidTable *voidTable) {
          */
         int hasVoidProduction = 0;
         while (production != NULL) {
+            
             /**
              * @brief 如果该产生式只有一个符号且是 ε
              * 则标记文法包含 ε 产生式
@@ -205,7 +206,7 @@ VoidTable *GenVoidTable(const Rule *ruleHead) {
  * @param ruleName 文法的名字
  * @return int* 值在空表中的位置
  */
-int *FindHasVoid(VoidTable *voidTable, const char *ruleName) {
+int *FindHasVoid(const VoidTable *voidTable, const char *ruleName) {
     assert(IS_VOID_TABLE(voidTable) && ruleName);
     for (int i = 0; i < voidTable->colCount; i++) {
         if (strcmp(voidTable->tableHead[i], ruleName) == 0) {

@@ -31,7 +31,7 @@ struct LinkedNode {
 
 struct Symbol {
     char *symbolName;
-    Rule *rule;
+    const Rule *rule;
 };
 
 struct Production {
@@ -63,8 +63,8 @@ Production *CopyProduction(const Production *productionTemplate);
 Rule *CopyRule(const Rule *ruleHead);
 Rule *CopyRules(const Rule *ruleHeadTemplate);
 LinkedNode *DeleteNode(LinkedNode *head, LinkedNode *node);
-LinkedNode *AppendNode(LinkedNode *head, const LinkedNode *node);
-LinkedNode *InsertNode(LinkedNode *head, const LinkedNode *destNode,
+LinkedNode *AppendNode(LinkedNode *head, LinkedNode *node);
+LinkedNode *InsertNode(LinkedNode *head, LinkedNode *destNode,
                        LinkedNode *node);
 LinkedNode *NewNode();
 

@@ -11,16 +11,14 @@
 #define IS_PARSING_TABLE(t) ((t) && (t)->type == Parsing)
 #define IS_SELECT_SET(s) ((s) && (s)->type == SelectSet)
 
-
-
 struct ParsingTableRow {
-    Rule *rule;               // 行首的文法
-    Production **productions; // 行内的产生式
+    const Rule *rule;               // 行首的文法
+    const Production **productions; // 行内的产生式
 };
 
 struct SelectSetKey {
-    Rule *rule;             // 文法
-    Production *production; // 产生式
+    const Rule *rule;             // 文法
+    const Production *production; // 产生式
 };
 
 typedef struct Table ParsingTable;
@@ -34,7 +32,7 @@ SelectSetList *GenSelectSetList(const Rule *ruleHead,
                                 const FollowSetList *followSetList);
 ParsingTable *GenParsingTable(const Rule *ruleHead,
                               const SelectSetList *selectSetList);
-Production **FindProduction(const ParsingTable *parsingTable, const Rule *rule,
+const Production **FindProduction(const ParsingTable *parsingTable, const Rule *rule,
                             const char *terminal);
 void PrintSelectSetList(const SelectSetList *selectSetList);
 void PrintParsingTable(const ParsingTable *parsingTable);

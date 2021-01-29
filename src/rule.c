@@ -225,7 +225,7 @@ LinkedNode *DeleteNode(LinkedNode *head, LinkedNode *node) {
  * @param node 节点指针
  * @return LinkedNode* 追加节点后链表头指针
  */
-LinkedNode *AppendNode(LinkedNode *head, const LinkedNode *node) {
+LinkedNode *AppendNode(LinkedNode *head, LinkedNode *node) {
     if (head == NULL) {
         return node;
     }
@@ -245,7 +245,7 @@ LinkedNode *AppendNode(LinkedNode *head, const LinkedNode *node) {
  * @param node 插入节点指针
  * @return LinkedNode* 插入节点后链表头指针
  */
-LinkedNode *InsertNode(LinkedNode *head, const LinkedNode *destNode,
+LinkedNode *InsertNode(LinkedNode *head, LinkedNode *destNode,
                        LinkedNode *node) {
     assert(head && node && head->type == node->type);
     if (head == destNode) {

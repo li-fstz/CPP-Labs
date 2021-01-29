@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include "pickupleftfactor.h"
-#include "rule.h"
 
 /**
  * @brief

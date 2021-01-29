@@ -65,6 +65,7 @@ void RemoveLeftRecursion(Rule *ruleHead) {
             production = production->next;
         }
     }
+    
     /**
      * @brief 向新文法添加 ε 产生式，然后将新文法加入到文法链表中
      */
