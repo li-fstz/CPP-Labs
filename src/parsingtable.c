@@ -35,15 +35,17 @@ SelectSetList *GenSelectSetList(const Rule *ruleHead,
     SelectSetList *selectSetList = calloc(1, sizeof(SetList));
     selectSetList->type = SelectSet;
 
-    for (; ruleHead != NULL; ruleHead = ruleHead->next) {
-        for (Production *production = PRODUCTION_HEAD(ruleHead);
+    const Rule *rule;
+
+    for (rule = ruleHead; rule != NULL; rule = rule->next) {
+        for (Production *production = PRODUCTION_HEAD(rule);
              production != NULL; production = production->next) {
 
             /**
              * @brief Select 集中的每个子集对应文法中的每一条产生式
              * 首先将这条产生式对应的 First 集中的符号加入到 Select 子集中
              */
-            AddOneSelectSet(selectSetList, ruleHead, production);
+            AddOneSelectSet(selectSetList, rule, production);
             Set *selectSet = selectSetList->sets + selectSetList->setCount - 1;
             for (Symbol *symbol = SYMBOL_HEAD(production); symbol != NULL;
                  symbol = symbol->next) {
@@ -53,9 +55,8 @@ SelectSetList *GenSelectSetList(const Rule *ruleHead,
                         break;
                     }
                 } else {
-                    AddSetToSet(
-                        selectSet,
-                        GetSet(firstSetList, SYMBOL_NAME(symbol), strKeyCmp));
+                    Set *srcSet = GetSet(firstSetList, SYMBOL_NAME(symbol), strKeyCmp);
+                    AddSetToSet(selectSet, srcSet);
                     if (!*FindHasVoid(voidTable, SYMBOL_NAME(symbol))) {
                         break;
                     }
@@ -67,8 +68,8 @@ SelectSetList *GenSelectSetList(const Rule *ruleHead,
              * 则去除 ε，并且向其中加入文法对应的 Follow 子集中的符号
              */
             if (RemoveVoidFromSet(selectSet)) {
-                AddSetToSet(selectSet, GetSet(followSetList,
-                                              RULE_NAME(ruleHead), strKeyCmp));
+                Set *srcSet = GetSet(followSetList, RULE_NAME(rule), strKeyCmp);
+                AddSetToSet(selectSet, srcSet);
             }
         }
     }
@@ -97,14 +98,15 @@ ParsingTable *GenParsingTable(const Rule *ruleHead,
             calloc(parsingTable->colCount, sizeof(Production));
     }
     for (int i = 0; i < selectSetList->setCount; i++) {
-        for (int j = 0; j < selectSetList->sets[i].terminalCount; j++) {
+        Set *selectSet = selectSetList->sets + i;
+        for (int j = 0; j < selectSet->terminalCount; j++) {
             const Production **foundProduction =
-                FindProduction(parsingTable, RULE_KEY(selectSetList->sets[i]),
-                               selectSetList->sets[i].terminals[j]);
+                FindProduction(parsingTable, RULE_KEY(selectSet),
+                               selectSet->terminals[j]);
             if (*foundProduction) {
                 puts("该文法不是 LL(1) 文法！");
             } else {
-                *foundProduction = PRODUCTION_KEY(selectSetList->sets[i]);
+                *foundProduction = PRODUCTION_KEY(selectSet);
             }
         }
     }
@@ -120,8 +122,8 @@ void PrintSelectSetList(const SelectSetList *selectSetList) {
     assert(IS_SELECT_SET(selectSetList));
     printf("\nThe Select Set:\n");
     for (int i = 0; i < selectSetList->setCount; i++) {
-        printf("Select(%s->", RULE_NAME(RULE_KEY(selectSetList->sets[i])));
-        PrintProduction(PRODUCTION_KEY(selectSetList->sets[i]));
+        printf("Select(%s->", RULE_NAME(RULE_KEY(selectSetList->sets + i)));
+        PrintProduction(PRODUCTION_KEY(selectSetList->sets + i));
         printf(") = { ");
         for (int j = 0; j < selectSetList->sets[i].terminalCount; j++) {
             printf("%s%s", selectSetList->sets[i].terminals[j],

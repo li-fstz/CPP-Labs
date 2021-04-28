@@ -6,8 +6,8 @@
 #include "rule.h"
 
 #define PARSINGTABLE_ROW(t, i) (((struct ParsingTableRow *)t->tableRows)[i])
-#define PRODUCTION_KEY(s) (((struct SelectSetKey *)s.key)->production)
-#define RULE_KEY(s) (((struct SelectSetKey *)s.key)->rule)
+#define PRODUCTION_KEY(s) (((struct SelectSetKey *)(s)->key)->production)
+#define RULE_KEY(s) (((struct SelectSetKey *)(s)->key)->rule)
 #define IS_PARSING_TABLE(t) ((t) && (t)->type == Parsing)
 #define IS_SELECT_SET(s) ((s) && (s)->type == SelectSet)
 

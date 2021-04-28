@@ -134,11 +134,11 @@ void Parse(const Rule *ruleHead, const ParsingTable *parsingTable,
             }
         } else {
             char ch[] = {*string, '\0'};
-            const Production *production =
-                *FindProduction(parsingTable, RULE(topSymbol), ch);
+            const Production **foundProduction = 
+                FindProduction(parsingTable, RULE(topSymbol), ch);
             printf("%s->", SYMBOL_NAME(topSymbol));
-            PrintProduction(production);
-            PushProduction(stack, production);
+            PrintProduction(*foundProduction);
+            PushProduction(stack, *foundProduction);
         }
         putchar('\n');
     }

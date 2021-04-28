@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "rule.h"
 
@@ -167,7 +168,7 @@ int NeedPickup(const Production *productionTemplate, int count,
  * @param rule 文法指针
  * @param production 产生式指针
  */
-void AddProductionToRule(Rule *rule, const Production *production) {
+void AddProductionToRule(Rule *rule, Production *production) {
     assert(IS_RULE(rule) && (!production || IS_PRODUCTION(production)));
     if (!production) {
         production = NewProduction();
@@ -188,7 +189,7 @@ char *GetUniqueRuleName(const Rule *ruleHead, const char *ruleName) {
     assert(IS_RULE(ruleHead) && ruleName);
     char tmp[MAX_STR_LENGTH];
     strcpy(tmp, ruleName);
-    for (Rule *rule = ruleHead; rule != NULL;) {
+    for (const Rule *rule = ruleHead; rule != NULL;) {
         if (strcmp(RULE_NAME(rule), tmp) == 0) {
             strcat(tmp, POSTFIX);
             rule = ruleHead;
