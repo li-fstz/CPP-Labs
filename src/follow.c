@@ -79,7 +79,7 @@ FollowSetList *GenFollowSetList(const Rule *ruleHead,
                     Set tmpSet;
                     memset(&tmpSet, 0, sizeof(Set));
 
-                    Symbol *tmpSymbol;
+                    const Symbol *tmpSymbol = symbol;
 
                     /**
                      * @brief
@@ -90,21 +90,17 @@ FollowSetList *GenFollowSetList(const Rule *ruleHead,
                      * 则将其对应的 First 子集中的符号加入临时子集，
                      * 并且，当其不能推出 ε 时结束向后查找；
                      */
-                    for (tmpSymbol = symbol->next; tmpSymbol != NULL;
-                         tmpSymbol = tmpSymbol->next) {
-                        if (IS_TOKEN(tmpSymbol)) {
-                            if (strcmp(SYMBOL_NAME(tmpSymbol), VOID_SYMBOL) !=
-                                0) {
-                                AddTerminalToSet(&tmpSet,
-                                                 SYMBOL_NAME(tmpSymbol));
+                    for (symbol = symbol->next; symbol != NULL;
+                         symbol = symbol->next) {
+                        if (IS_TOKEN(symbol)) {
+                            if (strcmp(SYMBOL_NAME(symbol), VOID_SYMBOL) != 0) {
+                                AddTerminalToSet(&tmpSet, SYMBOL_NAME(symbol));
                                 break;
                             }
                         } else {
-                            AddSetToSet(&tmpSet, GetSet(firstSetList,
-                                                        SYMBOL_NAME(tmpSymbol),
-                                                        strKeyCmp));
-                            if (!*FindHasVoid(voidTable,
-                                              SYMBOL_NAME(tmpSymbol))) {
+                            Set *srcSet = GetSet(firstSetList, SYMBOL_NAME(symbol), strKeyCmp);
+                            AddSetToSet(&tmpSet, srcSet);
+                            if (!*FindHasVoid(voidTable, SYMBOL_NAME(symbol))) {
                                 break;
                             }
                         }
@@ -119,8 +115,7 @@ FollowSetList *GenFollowSetList(const Rule *ruleHead,
                     /**
                      * @brief 目标 Follow 子集
                      */
-                    Set *desSet =
-                        GetSet(followSetList, SYMBOL_NAME(symbol), strKeyCmp);
+                    Set *desSet = GetSet(followSetList, SYMBOL_NAME(tmpSymbol), strKeyCmp);
                     isChange = AddSetToSet(desSet, &tmpSet) || isChange;
 
                     /**
@@ -129,12 +124,11 @@ FollowSetList *GenFollowSetList(const Rule *ruleHead,
                      * 则将该产生式对应文法的 Follow 子集中的符号
                      * 加入目标 Follow子集。
                      */
-                    if (tmpSymbol == NULL) {
-                        isChange = AddSetToSet(desSet, GetSet(followSetList,
-                                                              RULE_NAME(rule),
-                                                              strKeyCmp)) ||
-                                   isChange;
+                    if (symbol == NULL) {
+                        Set *srcSet = GetSet(followSetList, RULE_NAME(rule), strKeyCmp);
+                        isChange = AddSetToSet(desSet, srcSet) || isChange;
                     }
+                    symbol = tmpSymbol;
                 }
             }
         }

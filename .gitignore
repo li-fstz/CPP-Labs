@@ -2,3 +2,5 @@
 
 .xmake/
 build/
+
+.VSCodeCounter
