@@ -14,6 +14,6 @@ void PushProduction(ParsingStack *stack, const Production *production);
 const Symbol *PopSymbol(ParsingStack *stack);
 void Parse(const Rule *ruleHead, const ParsingTable *parsingTable,
            const char *string);
-void PrintParsingStack(const ParsingStack *stack);
-
+void FormatParsingStack(char *tmpStr, const ParsingStack *stack);
+void FormatProduction(char *tmpStr, const Production *production);
 #endif

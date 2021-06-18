@@ -71,10 +71,30 @@ const Symbol *PopSymbol(ParsingStack *stack) {
  *
  * @param stack 栈指针
  */
-void PrintParsingStack(const ParsingStack *stack) {
-    assert(stack);
+void FormatParsingStack(char *tmpStr, const ParsingStack *stack) {
+    assert(tmpStr && stack);
+    tmpStr[0] = '\0';
     for (int i = 0; i < stack->symbolCount; i++) {
-        printf(SYMBOL_NAME(stack->symbols[i]));
+        strcat(tmpStr, SYMBOL_NAME(stack->symbols[i]));
+    }
+    int len = strlen(tmpStr);
+    for (int i = len - 1; i < 10; i ++) {
+        tmpStr[i] = ' ';
+    }
+    tmpStr[10] = '\0';
+}
+
+/**
+ * @brief 输出产生式
+ *
+ * @param production 产生式指针
+ */
+void FormatProduction(char *tmpStr, const Production *production) {
+    assert(tmpStr && IS_PRODUCTION(production));
+    tmpStr[0] = '\0';
+    for (Symbol *symbol = SYMBOL_HEAD(production); symbol != NULL;
+         symbol = symbol->next) {
+        strcat(tmpStr, (SYMBOL_NAME(symbol)));
     }
 }
 
@@ -103,11 +123,15 @@ void Parse(const Rule *ruleHead, const ParsingTable *parsingTable,
     RULE(start) = ruleHead;
     PushSymbol(stack, start);
 
-    int i = 0;
-    while (stack->symbolCount) {
-        printf("%d\t", ++i);
-        PrintParsingStack(stack);
-        printf("\t%s\t", string);
+    int i = 0, parsingCorrect = 1;
+    while (stack->symbolCount && parsingCorrect) {
+        char procedureStr[200] = {'\0'}, tmpStr[100];
+        sprintf(tmpStr, "%-4d", ++i);
+        strcat(procedureStr, tmpStr);
+        FormatParsingStack(tmpStr, stack);
+        strcat(procedureStr, tmpStr);
+        sprintf(tmpStr, "%-10s", string);
+        strcat(procedureStr, tmpStr);
 
         /**
          * @brief 从分析栈中弹出符号
@@ -119,27 +143,31 @@ void Parse(const Rule *ruleHead, const ParsingTable *parsingTable,
         if (IS_TOKEN(topSymbol)) {
             if (stack->symbolCount) {
                 if (*SYMBOL_NAME(topSymbol) == *string) {
-                    printf("“%c”匹配", *string);
+                    sprintf(tmpStr, "“%c”匹配  ", *string);
                 } else {
-                    printf("“%c”不匹配", *string);
-                    return;
+                    sprintf(tmpStr, "“%c”不匹配", *string);
+                    parsingCorrect = 0;
                 }
+                strcat(procedureStr, tmpStr);
                 string++;
             } else {
                 if (strcmp(string, END_SYMBOL) == 0) {
-                    printf("接受");
+                    strcat(procedureStr, "接受  ");
                 } else {
-                    printf("不接受");
+                    strcat(procedureStr, "不接受");
+                    parsingCorrect = 0;
                 }
             }
         } else {
             char ch[] = {*string, '\0'};
             const Production **foundProduction = 
                 FindProduction(parsingTable, RULE(topSymbol), ch);
-            printf("%s->", SYMBOL_NAME(topSymbol));
-            PrintProduction(*foundProduction);
+            sprintf(tmpStr, "%s->", SYMBOL_NAME(topSymbol));
+            strcat(procedureStr, tmpStr);
+            FormatProduction(tmpStr, *foundProduction);
+            strcat(procedureStr, tmpStr);
             PushProduction(stack, *foundProduction);
         }
-        putchar('\n');
+        printf("%s\n", procedureStr);
     }
 }

@@ -87,6 +87,7 @@ ParsingTable *GenParsingTable(const Rule *ruleHead,
                               const SelectSetList *selectSetList) {
     assert(IS_RULE(ruleHead) && IS_SELECT_SET(selectSetList));
     ParsingTable *parsingTable = calloc(1, sizeof(ParsingTable));
+    int isLL1Rule = 1;
     parsingTable->tableHead = GetTerminals(ruleHead, &parsingTable->colCount);
     parsingTable->type = Parsing;
     for (int i = 0; ruleHead != NULL; ruleHead = ruleHead->next, i++) {
@@ -105,9 +106,14 @@ ParsingTable *GenParsingTable(const Rule *ruleHead,
                                selectSet->terminals[j]);
             if (*foundProduction) {
                 puts("该文法不是 LL(1) 文法！");
+                isLL1Rule = 0;
+                break;
             } else {
                 *foundProduction = PRODUCTION_KEY(selectSet);
             }
+        }
+        if (!isLL1Rule) {
+            break;
         }
     }
     return parsingTable;
@@ -190,13 +196,18 @@ char **GetTerminals(const Rule *ruleHead, int *count) {
              production != NULL; production = production->next) {
             for (Symbol *symbol = SYMBOL_HEAD(production); symbol != NULL;
                  symbol = symbol->next) {
-                if (!IS_TOKEN(symbol)) {
+                if (!IS_TOKEN(symbol) || strcmp(SYMBOL_NAME(symbol), VOID_SYMBOL) == 0) {
                     continue;
                 }
+                int has = 0;
                 for (int i = 0; i < *count; i++) {
                     if (strcmp(terminals[i], SYMBOL_NAME(symbol)) == 0) {
-                        continue;
+                        has = 1;
+                        break;
                     }
+                }
+                if (has) {
+                    continue;
                 }
                 terminals = realloc(terminals, (*count + 1) * sizeof(char *));
                 terminals[(*count)++] = strdup(SYMBOL_NAME(symbol));
